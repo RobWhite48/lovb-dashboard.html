@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOVB × Hudl — Usage Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0d13;
+    --surface: #111520;
+    --surface2: #161b28;
+    --border: #1e2740;
+    --accent: #e8ff47;
+    --accent2: #4fc3f7;
+    --accent3: #ff6b6b;
+    --text: #e8eaf0;
+    --muted: #6b7394;
+    --lovb-pink: #ff3d7f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .everything { position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 48px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo-area h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 7vw, 88px);
+    letter-spacing: 2px;
+    line-height: 0.9;
+    color: var(--text);
+  }
+
+  .logo-area h1 span {
+    color: var(--accent);
+  }
+
+  .logo-area p {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .header-meta {
+    text-align: right;
+  }
+
+  .header-meta .date-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* HERO STATS */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-block {
+    background: var(--bg);
+    padding: 40px 48px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+
+  .stat-block:hover { background: var(--surface); }
+
+  .stat-block::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .stat-block:hover::after { transform: scaleX(1); }
+
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .stat-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 6vw, 80px);
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .stat-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    padding: 48px;
+    display: grid;
+    gap: 32px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .chart-card h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .chart-card .chart-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  /* MAU chart controls */
+  .mau-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .mau-controls-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .mau-mode-btns {
+    display: flex;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .mau-mode-btns button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .mau-mode-btns button.active {
+    background: var(--accent);
+    color: #0a0d13;
+    font-weight: 600;
+  }
+
+  /* Club search + dropdown */
+  .club-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 340px;
+  }
+
+  .club-search-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .club-search-input:focus { border-color: var(--accent); }
+  .club-search-input::placeholder { color: var(--muted); }
+
+  .club-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .club-dropdown.open { display: block; }
+
+  .club-dropdown-item {
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.1s;
+  }
+
+  .club-dropdown-item:hover { background: var(--surface2); }
+
+  .club-dropdown-item .check {
+    width: 14px; height: 14px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+  }
+
+  .club-dropdown-item.selected .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0d13;
+  }
+
+  .club-dropdown-item .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Selected club tags */
+  .selected-clubs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 0;
+  }
+
+  .club-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .club-tag:hover { opacity: 0.75; }
+
+  .club-tag .tag-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  .club-tag .tag-x {
+    font-size: 13px;
+    line-height: 1;
+    margin-left: 2px;
+  }
+
+  .clear-all-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .clear-all-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* DATA TABLE */
+  .table-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .table-header h3 {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .table-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box:focus {
+    border-color: var(--accent);
+  }
+
+  .search-box::placeholder { color: var(--muted); }
+
+  .btn-download {
+    background: var(--accent);
+    color: #0a0d13;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-download:hover { opacity: 0.85; }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  thead th:hover { color: var(--accent); }
+
+  thead th.sorted { color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 12px 20px;
+    color: var(--text);
+  }
+
+  tbody td.number {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  tbody td.club-name {
+    font-weight: 500;
+    max-width: 240px;
+  }
+
+  .bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .mini-bar {
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .mini-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .pagination {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .pagination-btns { display: flex; gap: 8px; }
+
+  .pg-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .pg-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pg-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer p {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .powered-by {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .powered-by span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-block, .chart-card, .table-section {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .stat-block:nth-child(1) { animation-delay: 0.05s; }
+  .stat-block:nth-child(2) { animation-delay: 0.10s; }
+  .stat-block:nth-child(3) { animation-delay: 0.15s; }
+
+  @media (max-width: 900px) {
+    header, .main, footer { padding: 24px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-card.full-width { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="everything">
+
+  <header>
+    <div class="logo-area">
+      <h1>LOVB<span>×</span>HUDL</h1>
+      <p>Platform Usage Dashboard</p>
+    </div>
+    <div class="header-meta">
+      <div class="date-badge" id="reportDate">Loading...</div>
+    </div>
+  </header>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats">
+    <div class="stat-block">
+      <div class="stat-label">Total Videos Uploaded</div>
+      <div class="stat-number">16,475</div>
+      <div class="stat-sub">Across all LOVB clubs</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Active Clubs</div>
+      <div class="stat-number" id="activeClubs">—</div>
+      <div class="stat-sub">Uploading video content</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Monthly Active Users</div>
+      <div class="stat-number" id="latestMAU">—</div>
+      <div class="stat-sub">Most recent month</div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- CHARTS -->
+    <div>
+      <div class="section-title">Visuals</div>
+      <div class="charts-grid">
+
+        <!-- Top Clubs by Videos -->
+        <div class="chart-card">
+          <h3>Top 15 Clubs by Videos Uploaded</h3>
+          <div class="chart-sub">All-time total video uploads per club</div>
+          <div class="chart-wrap"><canvas id="topClubsChart" height="320"></canvas></div>
+        </div>
+
+        <!-- Video Type Breakdown -->
+        <div class="chart-card">
+          <h3>Games vs. Practices by Club</h3>
+          <div class="chart-sub">Top 15 clubs — stacked by video type</div>
+          <div class="chart-wrap"><canvas id="videoTypeChart" height="320"></canvas></div>
+        </div>
+
+        <!-- MAU over time -->
+        <div class="chart-card full-width">
+          <h3>Monthly Active Users Over Time</h3>
+          <div class="chart-sub" id="mauSubtitle">Showing total MAU across all clubs — search to zoom in or compare</div>
+          <div class="mau-controls">
+            <div class="mau-controls-top">
+              <div class="mau-mode-btns">
+                <button id="modeAllBtn" class="active" onclick="setMode('all')">All Clubs</button>
+                <button id="modeSelectBtn" onclick="setMode('select')">Compare Clubs</button>
+              </div>
+              <div class="club-search-wrap" id="searchWrap" style="display:none">
+                <input class="club-search-input" id="clubSearchInput" placeholder="Search and add a club…" autocomplete="off" oninput="filterDropdown()" onfocus="openDropdown()" />
+                <div class="club-dropdown" id="clubDropdown"></div>
+              </div>
+              <button class="clear-all-btn" id="clearAllBtn" style="display:none" onclick="clearAllClubs()">✕ Clear all</button>
+            </div>
+            <div class="selected-clubs" id="selectedClubs"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="mauChart" height="200"></canvas></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RAW DATA TABLE -->
+    <div>
+      <div class="section-title">Raw Data</div>
+      <div class="table-section">
+        <div class="table-header">
+          <h3>Club-by-Club Breakdown</h3>
+          <div class="table-controls">
+            <input type="text" class="search-box" id="tableSearch" placeholder="Search clubs..." oninput="filterTable()">
+            <button class="btn-download" onclick="downloadCSV()">
+              ↓ Download CSV
+            </button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('name')">Club</th>
+                <th onclick="sortTable('total')" style="text-align:right">Total Videos</th>
+                <th onclick="sortTable('games')" style="text-align:right">Games</th>
+                <th onclick="sortTable('practices')" style="text-align:right">Practices</th>
+                <th onclick="sortTable('mau')" style="text-align:right">Latest MAU</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="paginationInfo"></span>
+          <div class="pagination-btns">
+            <button class="pg-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+            <button class="pg-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>Data sourced from Hudl · LOVB Partner Dashboard</p>
+    <div class="powered-by">Powered by <span>Hudl Analytics</span></div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const videosByClub = [
+  {name:"A5 Volleyball Club",total:1268,games:1237,practices:26},
+  {name:"Kokoro Volleyball",total:882,games:879,practices:1},
+  {name:"Houston Skyline Jr's",total:869,games:805,practices:55},
+  {name:"Albuquerque Rebels Volleyball Club",total:795,games:776,practices:16},
+  {name:"Athena VBC",total:716,games:672,practices:42},
+  {name:"Rockstar Volleyball",total:642,games:620,practices:17},
+  {name:"Red Rock Volleyball",total:614,games:571,practices:24},
+  {name:"Game Point Volleyball",total:538,games:535,practices:2},
+  {name:"JJVA Jacksonville Juniors Volleyball Association",total:534,games:530,practices:4},
+  {name:"SMASH Volleyball Club",total:518,games:503,practices:15},
+  {name:"Austin Junior Volleyball",total:484,games:483,practices:0},
+  {name:"Tstreet Volleyball Club",total:469,games:461,practices:8},
+  {name:"Union Volleyball",total:463,games:455,practices:3},
+  {name:"Madtown Volleyball",total:448,games:435,practices:13},
+  {name:"Premier Nebraska Volleyball",total:431,games:428,practices:2},
+  {name:"RockCity Volleyball",total:419,games:412,practices:7},
+  {name:"Spike & Serve Volleyball Club",total:410,games:392,practices:18},
+  {name:"Boomers Volleyball Academy",total:398,games:395,practices:3},
+  {name:"One Wisconsin VBC",total:374,games:358,practices:15},
+  {name:"KC Power",total:360,games:351,practices:9},
+  {name:"Colorado Juniors",total:356,games:352,practices:4},
+  {name:"Aspire Volleyball",total:319,games:318,practices:0},
+  {name:"Platform Elite Volleyball",total:311,games:310,practices:0},
+  {name:"M1 Volleyball",total:301,games:295,practices:6},
+  {name:"Colorado Volleyball Association",total:295,games:293,practices:1},
+  {name:"Roots Volleyball",total:272,games:271,practices:1},
+  {name:"Iowa Impact Volleyball Club",total:268,games:267,practices:0},
+  {name:"Iowa United Volleyball",total:252,games:247,practices:5},
+  {name:"DaKine Volleyball Club",total:231,games:229,practices:0},
+  {name:"East Coast Volleyball Club",total:225,games:223,practices:2},
+  {name:"Lexington United Volleyball",total:211,games:208,practices:2},
+  {name:"FC Elite",total:206,games:205,practices:1},
+  {name:"Meraki Volleyball",total:158,games:116,practices:22},
+  {name:"Gainesville Juniors",total:149,games:149,practices:0},
+  {name:"DG Warriors",total:147,games:146,practices:0},
+  {name:"Rhythm Volleyball Academy",total:145,games:141,practices:4},
+  {name:"Elite Volleyball Training Center",total:117,games:116,practices:1},
+  {name:"513 Volleyball",total:111,games:110,practices:0},
+  {name:"Seal Beach Volleyball Club",total:110,games:110,practices:0},
+  {name:"Atlanta Extreme Volleyball Club",total:108,games:104,practices:3},
+  {name:"Northern Nevada Juniors Volleyball Club",total:101,games:93,practices:8},
+  {name:"Team Detroit",total:84,games:83,practices:1},
+  {name:"Salt City Boys (LOVB)",total:74,games:74,practices:0},
+  {name:"Maverick Volleyball Club",total:73,games:72,practices:1},
+  {name:"Reign Volleyball",total:72,games:71,practices:1},
+  {name:"Club 801 Volleyball",total:56,games:54,practices:2},
+  {name:"1 Flight Volleyball Club",total:52,games:52,practices:0},
+  {name:"Evansville United",total:44,games:44,practices:0},
+];
+
+const mauRaw = [
+  ["2026-02-01",94102,"A5 Volleyball Club",643],
+  ["2026-02-01",55517,"Houston Skyline Jr's",489],
+  ["2026-02-01",173983,"Kokoro Volleyball",361],
+  ["2026-02-01",99864,"Rockstar Volleyball",335],
+  ["2026-02-01",109361,"Red Rock Volleyball",300],
+  ["2026-02-01",114603,"Athena VBC",279],
+  ["2026-02-01",134570,"Albuquerque Rebels Volleyball Club",263],
+  ["2026-02-01",139501,"Tstreet Volleyball Club",259],
+  ["2026-02-01",111593,"SMASH Volleyball Club",237],
+  ["2026-02-01",164392,"Madtown Volleyball",237],
+  ["2026-02-01",73108,"Premier Nebraska Volleyball",235],
+  ["2026-02-01",63032,"Austin Junior Volleyball",208],
+  ["2026-02-01",76107,"JJVA Jacksonville Juniors Volleyball Association",199],
+  ["2026-02-01",158985,"RockCity Volleyball",195],
+  ["2026-02-01",165386,"Game Point Volleyball",194],
+  ["2026-02-01",59350,"KC Power",172],
+  ["2026-02-01",171158,"Union Volleyball",170],
+  ["2026-02-01",90231,"Aspire Volleyball",155],
+  ["2026-02-01",140985,"Colorado Volleyball Association",149],
+  ["2026-02-01",95481,"Boomers Volleyball Academy",147],
+  ["2026-02-01",116594,"One Wisconsin VBC",145],
+  ["2026-02-01",35479,"Spike & Serve Volleyball Club",141],
+  ["2026-02-01",140376,"Platform Elite Volleyball",138],
+  ["2026-02-01",184990,"M1 Volleyball",124],
+  ["2026-02-01",139175,"Roots Volleyball",119],
+  ["2026-02-01",99313,"Colorado Juniors",118],
+  ["2026-02-01",141441,"Lexington United Volleyball",109],
+  ["2026-02-01",116865,"FC Elite",105],
+  ["2026-02-01",138078,"DaKine Volleyball Club",97],
+  ["2026-02-01",191038,"Iowa United Volleyball",95],
+  ["2026-02-01",165908,"East Coast Volleyball Club",94],
+  ["2026-02-01",191254,"Rhythm Volleyball Academy",93],
+  ["2026-02-01",191031,"Iowa Impact Volleyball Club",84],
+  ["2026-02-01",173418,"DG Warriors",79],
+  ["2026-02-01",165821,"Seal Beach Volleyball Club",79],
+  ["2026-02-01",158892,"Gainesville Juniors",68],
+  ["2026-02-01",113057,"Meraki Volleyball",64],
+  ["2026-02-01",191036,"513 Volleyball",57],
+  ["2026-02-01",140645,"Atlanta Extreme Volleyball Club",50],
+  ["2026-02-01",185710,"Reign Volleyball",45],
+  ["2026-02-01",158700,"Club 801 Volleyball",43],
+  ["2026-02-01",140761,"Elite Volleyball Training Center",41],
+  ["2026-02-01",141012,"Team Detroit",38],
+  ["2026-02-01",191233,"Maverick Volleyball Club",32],
+  ["2026-02-01",186069,"Northern Nevada Juniors Volleyball Club",32],
+  ["2026-02-01",192580,"1 Flight Volleyball Club",26],
+  ["2026-02-01",142105,"Evansville United",25],
+  ["2026-02-01",190920,"Salt City Boys (LOVB)",15],
+  ["2026-02-01",191104,"Georgia Beach Volleyball",4],
+  ["2026-01-01",94102,"A5 Volleyball Club",712],
+  ["2026-01-01",55517,"Houston Skyline Jr's",543],
+  ["2026-01-01",173983,"Kokoro Volleyball",438],
+  ["2026-01-01",99864,"Rockstar Volleyball",421],
+  ["2026-01-01",109361,"Red Rock Volleyball",341],
+  ["2026-01-01",114603,"Athena VBC",321],
+  ["2026-01-01",134570,"Albuquerque Rebels Volleyball Club",294],
+  ["2026-01-01",139501,"Tstreet Volleyball Club",272],
+  ["2026-01-01",111593,"SMASH Volleyball Club",238],
+  ["2026-01-01",73108,"Premier Nebraska Volleyball",225],
+  ["2026-01-01",165386,"Game Point Volleyball",221],
+  ["2026-01-01",164392,"Madtown Volleyball",215],
+  ["2026-01-01",63032,"Austin Junior Volleyball",209],
+  ["2026-01-01",35479,"Spike & Serve Volleyball Club",209],
+  ["2026-01-01",76107,"JJVA Jacksonville Juniors Volleyball Association",205],
+  ["2026-01-01",158985,"RockCity Volleyball",193],
+  ["2026-01-01",59350,"KC Power",193],
+  ["2026-01-01",171158,"Union Volleyball",189],
+  ["2026-01-01",90231,"Aspire Volleyball",183],
+  ["2026-01-01",140985,"Colorado Volleyball Association",163],
+  ["2026-01-01",140376,"Platform Elite Volleyball",154],
+  ["2026-01-01",95481,"Boomers Volleyball Academy",142],
+  ["2026-01-01",139175,"Roots Volleyball",133],
+  ["2026-01-01",184990,"M1 Volleyball",133],
+  ["2026-01-01",116865,"FC Elite",125],
+  ["2026-01-01",99313,"Colorado Juniors",124],
+  ["2026-01-01",116594,"One Wisconsin VBC",121],
+  ["2026-01-01",165908,"East Coast Volleyball Club",118],
+  ["2026-01-01",141441,"Lexington United Volleyball",116],
+  ["2026-01-01",191031,"Iowa Impact Volleyball Club",113],
+  ["2026-01-01",191038,"Iowa United Volleyball",100],
+  ["2026-01-01",138078,"DaKine Volleyball Club",95],
+  ["2026-01-01",191254,"Rhythm Volleyball Academy",87],
+  ["2026-01-01",165821,"Seal Beach Volleyball Club",78],
+  ["2026-01-01",173418,"DG Warriors",74],
+  ["2026-01-01",158892,"Gainesville Juniors",73],
+  ["2026-01-01",140645,"Atlanta Extreme Volleyball Club",70],
+  ["2026-01-01",113057,"Meraki Volleyball",66],
+  ["2026-01-01",191233,"Maverick Volleyball Club",60],
+  ["2026-01-01",191036,"513 Volleyball",60],
+  ["2026-01-01",140761,"Elite Volleyball Training Center",51],
+  ["2026-01-01",186069,"Northern Nevada Juniors Volleyball Club",49],
+  ["2026-01-01",141012,"Team Detroit",47],
+  ["2026-01-01",158700,"Club 801 Volleyball",46],
+  ["2026-01-01",190920,"Salt City Boys (LOVB)",38],
+  ["2026-01-01",192580,"1 Flight Volleyball Club",31],
+  ["2026-01-01",142105,"Evansville United",30],
+  ["2026-01-01",185710,"Reign Volleyball",13],
+  ["2025-12-01",94102,"A5 Volleyball Club",459],
+  ["2025-12-01",55517,"Houston Skyline Jr's",360],
+  ["2025-12-01",99864,"Rockstar Volleyball",347],
+  ["2025-12-01",111593,"SMASH Volleyball Club",230],
+  ["2025-12-01",114603,"Athena VBC",209],
+  ["2025-12-01",165386,"Game Point Volleyball",206],
+  ["2025-12-01",35479,"Spike & Serve Volleyball Club",192],
+  ["2025-12-01",134570,"Albuquerque Rebels Volleyball Club",182],
+  ["2025-12-01",139501,"Tstreet Volleyball Club",182],
+  ["2025-12-01",76107,"JJVA Jacksonville Juniors Volleyball Association",172],
+  ["2025-12-01",63032,"Austin Junior Volleyball",140],
+  ["2025-12-01",73108,"Premier Nebraska Volleyball",137],
+  ["2025-12-01",95481,"Boomers Volleyball Academy",122],
+  ["2025-12-01",139175,"Roots Volleyball",98],
+  ["2025-12-01",171158,"Union Volleyball",91],
+  ["2025-12-01",59350,"KC Power",85],
+  ["2025-12-01",99313,"Colorado Juniors",83],
+  ["2025-12-01",109361,"Red Rock Volleyball",70],
+  ["2025-12-01",90231,"Aspire Volleyball",69],
+  ["2025-12-01",165821,"Seal Beach Volleyball Club",62],
+  ["2025-12-01",113057,"Meraki Volleyball",57],
+  ["2025-12-01",158892,"Gainesville Juniors",56],
+  ["2025-12-01",165908,"East Coast Volleyball Club",46],
+  ["2025-12-01",190920,"Salt City Boys (LOVB)",43],
+  ["2025-12-01",116594,"One Wisconsin VBC",40],
+  ["2025-12-01",158985,"RockCity Volleyball",36],
+  ["2025-12-01",140985,"Colorado Volleyball Association",34],
+  ["2025-12-01",173983,"Kokoro Volleyball",33],
+  ["2025-12-01",141441,"Lexington United Volleyball",32],
+  ["2025-12-01",191036,"513 Volleyball",23],
+  ["2025-12-01",164392,"Madtown Volleyball",23],
+  ["2025-12-01",191031,"Iowa Impact Volleyball Club",20],
+  ["2025-12-01",140376,"Platform Elite Volleyball",17],
+  ["2025-12-01",138078,"DaKine Volleyball Club",16],
+  ["2025-12-01",191233,"Maverick Volleyball Club",15],
+  ["2025-12-01",192580,"1 Flight Volleyball Club",15],
+  ["2025-12-01",186069,"Northern Nevada Juniors Volleyball Club",13],
+  ["2025-12-01",158700,"Club 801 Volleyball",11],
+  ["2025-12-01",140645,"Atlanta Extreme Volleyball Club",11],
+  ["2025-12-01",185710,"Reign Volleyball",4],
+  ["2025-12-01",173418,"DG Warriors",4],
+  ["2025-12-01",116865,"FC Elite",4],
+  ["2025-12-01",140761,"Elite Volleyball Training Center",2],
+  ["2025-12-01",191038,"Iowa United Volleyball",2],
+  ["2025-12-01",184990,"M1 Volleyball",2],
+  ["2025-12-01",191104,"Georgia Beach Volleyball",1],
+  ["2025-12-01",142105,"Evansville United",1],
+  ["2025-11-01",99864,"Rockstar Volleyball",260],
+  ["2025-11-01",139501,"Tstreet Volleyball Club",93],
+  ["2025-11-01",94102,"A5 Volleyball Club",88],
+  ["2025-11-01",55517,"Houston Skyline Jr's",74],
+  ["2025-11-01",90231,"Aspire Volleyball",67],
+  ["2025-11-01",35479,"Spike & Serve Volleyball Club",65],
+  ["2025-11-01",109361,"Red Rock Volleyball",65],
+  ["2025-11-01",76107,"JJVA Jacksonville Juniors Volleyball Association",64],
+  ["2025-11-01",73108,"Premier Nebraska Volleyball",63],
+  ["2025-11-01",114603,"Athena VBC",61],
+  ["2025-11-01",171158,"Union Volleyball",59],
+  ["2025-11-01",63032,"Austin Junior Volleyball",48],
+  ["2025-11-01",190920,"Salt City Boys (LOVB)",47],
+  ["2025-11-01",113057,"Meraki Volleyball",44],
+  ["2025-11-01",140985,"Colorado Volleyball Association",32],
+  ["2025-11-01",134570,"Albuquerque Rebels Volleyball Club",28],
+  ["2025-11-01",111593,"SMASH Volleyball Club",27],
+  ["2025-11-01",191036,"513 Volleyball",23],
+  ["2025-11-01",95481,"Boomers Volleyball Academy",23],
+  ["2025-11-01",158985,"RockCity Volleyball",22],
+  ["2025-11-01",173983,"Kokoro Volleyball",21],
+  ["2025-11-01",191031,"Iowa Impact Volleyball Club",20],
+  ["2025-11-01",165386,"Game Point Volleyball",14],
+  ["2025-11-01",139175,"Roots Volleyball",11],
+  ["2025-11-01",165908,"East Coast Volleyball Club",10],
+  ["2025-11-01",158700,"Club 801 Volleyball",8],
+  ["2025-11-01",116594,"One Wisconsin VBC",6],
+  ["2025-11-01",140761,"Elite Volleyball Training Center",5],
+  ["2025-11-01",138078,"DaKine Volleyball Club",4],
+  ["2025-11-01",191233,"Maverick Volleyball Club",4],
+  ["2025-11-01",59350,"KC Power",4],
+  ["2025-11-01",165821,"Seal Beach Volleyball Club",2],
+  ["2025-11-01",140645,"Atlanta Extreme Volleyball Club",2],
+  ["2025-11-01",99313,"Colorado Juniors",2],
+  ["2025-11-01",164392,"Madtown Volleyball",1],
+  ["2025-11-01",173418,"DG Warriors",1],
+  ["2025-11-01",191104,"Georgia Beach Volleyball",1],
+  ["2025-11-01",142105,"Evansville United",1],
+  ["2025-11-01",116865,"FC Elite",1],
+  ["2025-11-01",191038,"Iowa United Volleyball",1],
+  ["2025-11-01",141441,"Lexington United Volleyball",1],
+  ["2025-11-01",184990,"M1 Volleyball",1],
+  ["2025-11-01",185710,"Reign Volleyball",1],
+  ["2025-10-01",99864,"Rockstar Volleyball",180],
+  ["2025-10-01",90231,"Aspire Volleyball",82],
+  ["2025-10-01",190920,"Salt City Boys (LOVB)",55],
+  ["2025-10-01",94102,"A5 Volleyball Club",52],
+  ["2025-10-01",114603,"Athena VBC",52],
+  ["2025-10-01",109361,"Red Rock Volleyball",44],
+  ["2025-10-01",134570,"Albuquerque Rebels Volleyball Club",35],
+  ["2025-10-01",76107,"JJVA Jacksonville Juniors Volleyball Association",35],
+  ["2025-10-01",171158,"Union Volleyball",26],
+  ["2025-10-01",113057,"Meraki Volleyball",24],
+  ["2025-10-01",158985,"RockCity Volleyball",22],
+  ["2025-10-01",173983,"Kokoro Volleyball",21],
+  ["2025-10-01",73108,"Premier Nebraska Volleyball",17],
+  ["2025-10-01",55517,"Houston Skyline Jr's",15],
+  ["2025-10-01",139501,"Tstreet Volleyball Club",13],
+  ["2025-10-01",63032,"Austin Junior Volleyball",11],
+  ["2025-10-01",111593,"SMASH Volleyball Club",9],
+  ["2025-10-01",165908,"East Coast Volleyball Club",8],
+  ["2025-10-01",116594,"One Wisconsin VBC",4],
+  ["2025-10-01",191036,"513 Volleyball",4],
+  ["2025-10-01",138078,"DaKine Volleyball Club",3],
+  ["2025-10-01",158892,"Gainesville Juniors",3],
+  ["2025-10-01",59350,"KC Power",2],
+  ["2025-10-01",165821,"Seal Beach Volleyball Club",1],
+  ["2025-10-01",35479,"Spike & Serve Volleyball Club",1],
+  ["2025-10-01",99313,"Colorado Juniors",1],
+  ["2025-10-01",140985,"Colorado Volleyball Association",1],
+  ["2025-10-01",173418,"DG Warriors",1],
+  ["2025-10-01",185710,"Reign Volleyball",1],
+  ["2025-09-01",90231,"Aspire Volleyball",53],
+  ["2025-09-01",109361,"Red Rock Volleyball",44],
+  ["2025-09-01",99864,"Rockstar Volleyball",21],
+  ["2025-09-01",134570,"Albuquerque Rebels Volleyball Club",21],
+  ["2025-09-01",55517,"Houston Skyline Jr's",18],
+  ["2025-09-01",190920,"Salt City Boys (LOVB)",16],
+  ["2025-09-01",113057,"Meraki Volleyball",15],
+  ["2025-09-01",73108,"Premier Nebraska Volleyball",12],
+  ["2025-09-01",94102,"A5 Volleyball Club",8],
+  ["2025-09-01",165908,"East Coast Volleyball Club",7],
+  ["2025-09-01",171158,"Union Volleyball",4],
+  ["2025-09-01",138078,"DaKine Volleyball Club",3],
+  ["2025-09-01",114603,"Athena VBC",3],
+  ["2025-09-01",139501,"Tstreet Volleyball Club",2],
+  ["2025-09-01",141441,"Lexington United Volleyball",2],
+  ["2025-09-01",140985,"Colorado Volleyball Association",2],
+  ["2025-09-01",165386,"Game Point Volleyball",1],
+  ["2025-09-01",111593,"SMASH Volleyball Club",1],
+  ["2025-09-01",76107,"JJVA Jacksonville Juniors Volleyball Association",1],
+  ["2025-09-01",173983,"Kokoro Volleyball",1],
+  ["2025-09-01",165821,"Seal Beach Volleyball Club",1],
+  ["2025-09-01",99313,"Colorado Juniors",1],
+  ["2025-08-01",73108,"Premier Nebraska Volleyball",13],
+  ["2025-08-01",55517,"Houston Skyline Jr's",13],
+  ["2025-08-01",94102,"A5 Volleyball Club",6],
+  ["2025-08-01",165908,"East Coast Volleyball Club",3],
+  ["2025-08-01",141441,"Lexington United Volleyball",2],
+  ["2025-08-01",99864,"Rockstar Volleyball",2],
+  ["2025-08-01",114603,"Athena VBC",2],
+  ["2025-08-01",171158,"Union Volleyball",2],
+  ["2025-08-01",134570,"Albuquerque Rebels Volleyball Club",2],
+  ["2025-08-01",138078,"DaKine Volleyball Club",1],
+  ["2025-08-01",140985,"Colorado Volleyball Association",1],
+  ["2025-08-01",109361,"Red Rock Volleyball",1],
+  ["2025-08-01",139175,"Roots Volleyball",1],
+  ["2025-08-01",173983,"Kokoro Volleyball",1],
+  ["2025-07-01",73108,"Premier Nebraska Volleyball",11],
+  ["2025-07-01",55517,"Houston Skyline Jr's",2],
+  ["2025-07-01",114603,"Athena VBC",2],
+  ["2025-07-01",141441,"Lexington United Volleyball",2],
+  ["2025-07-01",186069,"Northern Nevada Juniors Volleyball Club",1],
+  ["2025-07-01",165908,"East Coast Volleyball Club",1],
+  ["2025-07-01",109361,"Red Rock Volleyball",1],
+  ["2025-07-01",99864,"Rockstar Volleyball",1],
+];
+
+// ============================================================
+// SETUP
+// ============================================================
+
+// Get latest MAU per club
+const latestMAUByClub = {};
+mauRaw.forEach(([date,id,name,mau]) => {
+  if (!latestMAUByClub[name] || date > latestMAUByClub[name].date) {
+    latestMAUByClub[name] = { mau, date };
+  }
+});
+
+// Enrich videosByClub with MAU
+const tableData = videosByClub.map(c => ({
+  ...c,
+  mau: latestMAUByClub[c.name]?.mau || 0
+}));
+
+// Hero stats
+document.getElementById('activeClubs').textContent = videosByClub.length;
+const feb2026Total = mauRaw.filter(r => r[0] === '2026-02-01').reduce((s,r) => s+r[3], 0);
+document.getElementById('latestMAU').textContent = feb2026Total.toLocaleString();
+document.getElementById('reportDate').textContent = 'Data as of Feb 2026';
+
+const maxTotal = Math.max(...videosByClub.map(c => c.total));
+
+// ============================================================
+// CHART 1 — Top 15 clubs by videos
+// ============================================================
+const top15 = [...videosByClub].sort((a,b) => b.total - a.total).slice(0,15);
+const chartColors = [
+  '#e8ff47','#d4eb3f','#c0d738','#adc331','#99af2a',
+  '#4fc3f7','#45b0e0','#3b9dc9','#318ab2','#27779b',
+  '#ff6b6b','#e86060','#d15555','#ba4a4a','#a33f3f'
+];
+
+new Chart(document.getElementById('topClubsChart'), {
+  type: 'bar',
+  data: {
+    labels: top15.map(c => c.name.length > 22 ? c.name.slice(0,20)+'…' : c.name),
+    datasets: [{
+      data: top15.map(c => c.total),
+      backgroundColor: chartColors,
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: {
+      callbacks: { title: (i) => top15[i[0].dataIndex].name }
+    }},
+    scales: {
+      x: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
+      y: { grid: { display: false }, ticks: { color: '#e8eaf0', font: { size: 11 } } }
+    }
+  }
+});
+
+// ============================================================
+// CHART 2 — Games vs Practices stacked
+// ============================================================
+const top15type = [...videosByClub].sort((a,b) => b.total - a.total).slice(0,15);
+
+new Chart(document.getElementById('videoTypeChart'), {
+  type: 'bar',
+  data: {
+    labels: top15type.map(c => c.name.length > 22 ? c.name.slice(0,20)+'…' : c.name),
+    datasets: [
+      { label: 'Games', data: top15type.map(c => c.games), backgroundColor: '#4fc3f7', borderRadius: 0 },
+      { label: 'Practices', data: top15type.map(c => c.practices), backgroundColor: '#e8ff47', borderRadius: 4 },
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#6b7394', font: { size: 11 }, boxWidth: 10 } },
+      tooltip: { callbacks: { title: (i) => top15type[i[0].dataIndex].name } }
+    },
+    scales: {
+      x: { stacked: true, grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
+      y: { stacked: true, grid: { display: false }, ticks: { color: '#e8eaf0', font: { size: 11 } } }
+    }
+  }
+});
+
+// ============================================================
+// CHART 3 — MAU over time (multi-select compare)
+// ============================================================
+const months = [...new Set(mauRaw.map(r => r[0]))].sort();
+const monthLabels = months.map(m => {
+  const d = new Date(m); return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+});
+
+const totalByMonth = months.map(m => mauRaw.filter(r=>r[0]===m).reduce((s,r)=>s+r[3],0));
+
+// All unique club names from MAU data, sorted alphabetically
+const allMAUClubs = [...new Set(mauRaw.map(r => r[2]))].sort();
+
+const lineColors = [
+  '#e8ff47','#4fc3f7','#ff6b6b','#c084fc','#fb923c',
+  '#34d399','#f472b6','#60a5fa','#fbbf24','#a78bfa',
+  '#f87171','#38bdf8','#4ade80','#e879f9','#facc15'
+];
+
+let mauMode = 'all'; // 'all' | 'select'
+let selectedClubs = []; // array of club names
+let mauChart;
+
+function clubColor(club) {
+  const idx = selectedClubs.indexOf(club);
+  return lineColors[idx % lineColors.length];
+}
+
+function buildMAUChart() {
+  if (mauChart) mauChart.destroy();
+
+  let datasets;
+  if (mauMode === 'all' || selectedClubs.length === 0) {
+    datasets = [{
+      label: 'All Clubs (Total)',
+      data: totalByMonth,
+      borderColor: '#e8ff47',
+      backgroundColor: 'rgba(232,255,71,0.07)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 4,
+      pointBackgroundColor: '#e8ff47',
+      borderWidth: 2,
+    }];
+  } else {
+    datasets = selectedClubs.map((club, i) => {
+      const col = lineColors[i % lineColors.length];
+      return {
+        label: club,
+        data: months.map(m => {
+          const row = mauRaw.find(r => r[0]===m && r[2]===club);
+          return row ? row[3] : null;
+        }),
+        borderColor: col,
+        backgroundColor: col + '12',
+        fill: false,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: col,
+        borderWidth: 2,
+        spanGaps: false,
+      };
+    });
+  }
+
+  mauChart = new Chart(document.getElementById('mauChart'), {
+    type: 'line',
+    data: { labels: monthLabels, datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: selectedClubs.length > 1,
+          labels: { color: '#6b7394', font: { size: 11 }, boxWidth: 10, padding: 14 }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
+        y: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+function setMode(mode) {
+  mauMode = mode;
+  document.getElementById('modeAllBtn').classList.toggle('active', mode === 'all');
+  document.getElementById('modeSelectBtn').classList.toggle('active', mode === 'select');
+  document.getElementById('searchWrap').style.display = mode === 'select' ? 'block' : 'none';
+  document.getElementById('clearAllBtn').style.display = mode === 'select' && selectedClubs.length > 0 ? 'flex' : 'none';
+  if (mode === 'all') {
+    document.getElementById('mauSubtitle').textContent = 'Showing total MAU across all clubs';
+  } else {
+    document.getElementById('mauSubtitle').textContent = selectedClubs.length === 0
+      ? 'Search for clubs to zoom in or compare side-by-side'
+      : `Comparing ${selectedClubs.length} club${selectedClubs.length > 1 ? 's' : ''}`;
+  }
+  buildMAUChart();
+}
+
+function toggleClub(club) {
+  const idx = selectedClubs.indexOf(club);
+  if (idx === -1) {
+    if (selectedClubs.length >= 15) return; // cap at 15
+    selectedClubs.push(club);
+  } else {
+    selectedClubs.splice(idx, 1);
+  }
+  renderSelectedTags();
+  renderDropdown(document.getElementById('clubSearchInput').value);
+  document.getElementById('clearAllBtn').style.display = selectedClubs.length > 0 ? 'flex' : 'none';
+  document.getElementById('mauSubtitle').textContent = selectedClubs.length === 0
+    ? 'Search for clubs to zoom in or compare side-by-side'
+    : `Comparing ${selectedClubs.length} club${selectedClubs.length > 1 ? 's' : ''}`;
+  buildMAUChart();
+}
+
+function clearAllClubs() {
+  selectedClubs = [];
+  renderSelectedTags();
+  renderDropdown('');
+  document.getElementById('clearAllBtn').style.display = 'none';
+  document.getElementById('mauSubtitle').textContent = 'Search for clubs to zoom in or compare side-by-side';
+  buildMAUChart();
+}
+
+function renderSelectedTags() {
+  const container = document.getElementById('selectedClubs');
+  container.innerHTML = '';
+  selectedClubs.forEach((club, i) => {
+    const col = lineColors[i % lineColors.length];
+    const tag = document.createElement('div');
+    tag.className = 'club-tag';
+    tag.style.background = col + '22';
+    tag.style.borderColor = col + '66';
+    tag.style.color = col;
+    tag.innerHTML = `<div class="tag-dot" style="background:${col}"></div>${club.length > 28 ? club.slice(0,26)+'…' : club}<span class="tag-x" onclick="toggleClub('${club.replace(/'/g,"\\'")}')">×</span>`;
+    container.appendChild(tag);
+  });
+}
+
+// Dropdown logic
+function renderDropdown(query) {
+  const dropdown = document.getElementById('clubDropdown');
+  const q = query.toLowerCase();
+  const filtered = allMAUClubs.filter(c => c.toLowerCase().includes(q));
+  dropdown.innerHTML = '';
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div class="club-dropdown-item" style="color:#6b7394;cursor:default">No clubs found</div>';
+    return;
+  }
+  filtered.forEach(club => {
+    const isSelected = selectedClubs.includes(club);
+    const idx = selectedClubs.indexOf(club);
+    const col = isSelected ? lineColors[idx % lineColors.length] : '#6b7394';
+    const item = document.createElement('div');
+    item.className = 'club-dropdown-item' + (isSelected ? ' selected' : '');
+    item.innerHTML = `<div class="check" style="${isSelected ? `background:${col};border-color:${col}` : ''}">${isSelected ? '✓' : ''}</div><div class="dot" style="background:${col}"></div>${club}`;
+    item.onclick = (e) => { e.stopPropagation(); toggleClub(club); };
+    dropdown.appendChild(item);
+  });
+}
+
+function filterDropdown() {
+  renderDropdown(document.getElementById('clubSearchInput').value);
+  openDropdown();
+}
+
+function openDropdown() {
+  renderDropdown(document.getElementById('clubSearchInput').value);
+  document.getElementById('clubDropdown').classList.add('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.club-search-wrap')) {
+    document.getElementById('clubDropdown').classList.remove('open');
+  }
+});
+
+buildMAUChart();
+
+// ============================================================
+// TABLE
+// ============================================================
+let filteredData = [...tableData];
+let sortKey = 'total';
+let sortDir = -1;
+let currentPage = 0;
+const PAGE_SIZE = 15;
+
+function sortTable(key) {
+  if (sortKey === key) { sortDir *= -1; }
+  else { sortKey = key; sortDir = -1; }
+  renderTable();
+}
+
+function filterTable() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  filteredData = tableData.filter(r => r.name.toLowerCase().includes(q));
+  currentPage = 0;
+  renderTable();
+}
+
+function changePage(dir) {
+  const maxPage = Math.ceil(filteredData.length / PAGE_SIZE) - 1;
+  currentPage = Math.max(0, Math.min(maxPage, currentPage + dir));
+  renderTable();
+}
+
+function renderTable() {
+  const keyMap = { name:'name', total:'total', games:'games', practices:'practices', mau:'mau' };
+  const k = keyMap[sortKey] || 'total';
+
+  const sorted = [...filteredData].sort((a,b) => {
+    if (k === 'name') return sortDir * a.name.localeCompare(b.name);
+    return sortDir * (b[k] - a[k]);
+  });
+
+  const start = currentPage * PAGE_SIZE;
+  const page = sorted.slice(start, start + PAGE_SIZE);
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  page.forEach(row => {
+    const pct = Math.round((row.total / maxTotal) * 100);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="club-name">${row.name}</td>
+      <td class="number">
+        <div class="bar-cell">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+          ${row.total.toLocaleString()}
+        </div>
+      </td>
+      <td class="number">${row.games.toLocaleString()}</td>
+      <td class="number">${row.practices.toLocaleString()}</td>
+      <td class="number">${row.mau ? row.mau.toLocaleString() : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const total = filteredData.length;
+  const maxPage = Math.ceil(total / PAGE_SIZE);
+  document.getElementById('paginationInfo').textContent =
+    `Showing ${start+1}–${Math.min(start+PAGE_SIZE, total)} of ${total} clubs`;
+  document.getElementById('prevBtn').disabled = currentPage === 0;
+  document.getElementById('nextBtn').disabled = currentPage >= maxPage - 1;
+}
+
+renderTable();
+
+// ============================================================
+// CSV DOWNLOAD
+// ============================================================
+function downloadCSV() {
+  const headers = ['Club Name','Total Videos','Games','Practices','Latest MAU'];
+  const rows = tableData.map(r => [
+    `"${r.name}"`, r.total, r.games, r.practices, r.mau || ''
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'LOVB_Usage_Data.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
