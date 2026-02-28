@@ -3,712 +3,580 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOVB × Hudl — Usage Dashboard</title>
+<title>LOVB × Hudl — Club Usage Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-  :root {
-    --bg: #0a0d13;
-    --surface: #111520;
-    --surface2: #161b28;
-    --border: #1e2740;
-    --accent: #e8ff47;
-    --accent2: #4fc3f7;
-    --accent3: #ff6b6b;
-    --text: #e8eaf0;
-    --muted: #6b7394;
-    --lovb-pink: #ff3d7f;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 60px 60px;
-    opacity: 0.3;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .everything { position: relative; z-index: 1; }
-
-  /* HEADER */
-  header {
-    padding: 48px 48px 32px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .logo-area h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(48px, 7vw, 88px);
-    letter-spacing: 2px;
-    line-height: 0.9;
-    color: var(--text);
-  }
-
-  .logo-area h1 span {
-    color: var(--accent);
-  }
-
-  .logo-area p {
-    color: var(--muted);
-    font-size: 13px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-top: 8px;
-  }
-
-  .header-meta {
-    text-align: right;
-  }
-
-  .header-meta .date-badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  /* HERO STATS */
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1px;
-    background: var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .stat-block {
-    background: var(--bg);
-    padding: 40px 48px;
-    position: relative;
-    overflow: hidden;
-    transition: background 0.2s;
-  }
-
-  .stat-block:hover { background: var(--surface); }
-
-  .stat-block::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-  }
-
-  .stat-block:hover::after { transform: scaleX(1); }
-
-  .stat-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-
-  .stat-number {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(52px, 6vw, 80px);
-    line-height: 1;
-    color: var(--accent);
-  }
-
-  .stat-sub {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* MAIN CONTENT */
-  .main {
-    padding: 48px;
-    display: grid;
-    gap: 32px;
-  }
-
-  .section-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 13px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* CHARTS GRID */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .chart-card.full-width {
-    grid-column: 1 / -1;
-  }
-
-  .chart-card h3 {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .chart-card .chart-sub {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 24px;
-  }
-
-  .chart-wrap {
-    position: relative;
-    width: 100%;
-  }
-
-  /* MAU chart controls */
-  .mau-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .mau-controls-top {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .mau-mode-btns {
-    display: flex;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-
-  .mau-mode-btns button {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.5px;
-  }
-
-  .mau-mode-btns button.active {
-    background: var(--accent);
-    color: #0a0d13;
-    font-weight: 600;
-  }
-
-  /* Club search + dropdown */
-  .club-search-wrap {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-    max-width: 340px;
-  }
-
-  .club-search-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    padding: 7px 14px;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .club-search-input:focus { border-color: var(--accent); }
-  .club-search-input::placeholder { color: var(--muted); }
-
-  .club-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0; right: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    max-height: 220px;
-    overflow-y: auto;
-    z-index: 100;
-    display: none;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-
-  .club-dropdown.open { display: block; }
-
-  .club-dropdown-item {
-    padding: 8px 14px;
-    font-size: 12px;
-    color: var(--text);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background 0.1s;
-  }
-
-  .club-dropdown-item:hover { background: var(--surface2); }
-
-  .club-dropdown-item .check {
-    width: 14px; height: 14px;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px;
-  }
-
-  .club-dropdown-item.selected .check {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #0a0d13;
-  }
-
-  .club-dropdown-item .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* Selected club tags */
-  .selected-clubs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    min-height: 0;
-  }
-
-  .club-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px 3px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    border: 1px solid transparent;
-  }
-
-  .club-tag:hover { opacity: 0.75; }
-
-  .club-tag .tag-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-  }
-
-  .club-tag .tag-x {
-    font-size: 13px;
-    line-height: 1;
-    margin-left: 2px;
-  }
-
-  .clear-all-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .clear-all-btn:hover { border-color: var(--accent3); color: var(--accent3); }
-
-  /* DATA TABLE */
-  .table-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .table-header {
-    padding: 24px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .table-header h3 {
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .table-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .search-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    padding: 8px 14px;
-    border-radius: 6px;
-    width: 220px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .search-box:focus {
-    border-color: var(--accent);
-  }
-
-  .search-box::placeholder { color: var(--muted); }
-
-  .btn-download {
-    background: var(--accent);
-    color: #0a0d13;
-    border: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 8px 18px;
-    border-radius: 6px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: opacity 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .btn-download:hover { opacity: 0.85; }
-
-  .table-scroll {
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  thead th {
-    padding: 12px 20px;
-    text-align: left;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    white-space: nowrap;
-    user-select: none;
-  }
-
-  thead th:hover { color: var(--accent); }
-
-  thead th.sorted { color: var(--accent); }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
-  tbody tr:last-child { border-bottom: none; }
-
-  tbody tr:hover { background: var(--surface2); }
-
-  tbody td {
-    padding: 12px 20px;
-    color: var(--text);
-  }
-
-  tbody td.number {
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-  }
-
-  tbody td.club-name {
-    font-weight: 500;
-    max-width: 240px;
-  }
-
-  .bar-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    justify-content: flex-end;
-  }
-
-  .mini-bar {
-    width: 80px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .mini-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-  }
-
-  .pagination {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .pagination-btns { display: flex; gap: 8px; }
-
-  .pg-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    padding: 6px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .pg-btn:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .pg-btn:disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
-
-  /* FOOTER */
-  footer {
-    padding: 32px 48px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  footer p {
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
-  .powered-by {
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .powered-by span {
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .stat-block, .chart-card, .table-section {
-    animation: fadeUp 0.5s ease both;
-  }
-
-  .stat-block:nth-child(1) { animation-delay: 0.05s; }
-  .stat-block:nth-child(2) { animation-delay: 0.10s; }
-  .stat-block:nth-child(3) { animation-delay: 0.15s; }
-
-  @media (max-width: 900px) {
-    header, .main, footer { padding: 24px; }
-    .charts-grid { grid-template-columns: 1fr; }
-    .chart-card.full-width { grid-column: 1; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+
+:root {
+  --hudl-orange: #ff6300; --hudl-black: #101417; --hudl-dark-ink: #191f24;
+  --hudl-ink: #232a31; --hudl-blue: #0a93f5;
+  --bg: #0d1117; --surface: #161c23; --surface2: #1c242d; --surface3: #222c37;
+  --border: #2a3542; --border-light: #344152;
+  --text: #f0f4f8; --text-muted: #6b7d8f; --text-dim: #4e5d6c;
+  --accent: #ff6300; --accent-blue: #0a93f5;
+  --green: #34d399; --red: #f87171; --gold: #f59e0b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(255,99,0,0.012) 40px, rgba(255,99,0,0.012) 41px);
+  pointer-events: none; z-index: 0;
+}
+.wrap { position: relative; z-index: 1; }
+
+/* HEADER */
+header { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); background: var(--hudl-dark-ink); flex-wrap: wrap; }
+.header-brand { padding: 20px 32px; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; flex-shrink: 0; }
+.brand-lockup { display: flex; align-items: center; gap: 14px; }
+.brand-lovb { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: 2px; color: var(--text); text-transform: uppercase; }
+.brand-x { width: 1px; height: 28px; background: var(--border-light); }
+.brand-hudl { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+.brand-sub { font-size: 10px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+
+.header-stats { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); }
+.header-stat { padding: 16px 20px; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; position: relative; transition: background 0.2s; cursor: default; }
+.header-stat:hover { background: rgba(255,99,0,0.04); }
+.header-stat::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+.header-stat:hover::before { transform: scaleX(1); }
+.header-stat:last-child { border-right: none; }
+.hs-label { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.hs-value { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; line-height: 1; color: var(--accent); }
+.hs-sub { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+
+.header-right { padding: 16px 24px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border-left: 1px solid var(--border); flex-shrink: 0; }
+.date-pill { background: var(--surface3); border: 1px solid var(--border-light); border-radius: 4px; padding: 5px 12px; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+
+/* VIEW TOGGLE */
+.view-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+.view-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all 0.15s; }
+.view-btn.active { background: var(--accent); color: #fff; }
+
+/* MAIN */
+.main { padding: 28px 36px; display: grid; gap: 24px; }
+
+.section-label { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.section-label::before { content: ''; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* GLOBAL SEARCH */
+.global-search-wrap { position: relative; }
+.global-search-box { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 11px 16px; transition: border-color 0.2s; }
+.global-search-box:focus-within { border-color: var(--accent); }
+.global-search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; }
+.global-search-input::placeholder { color: var(--text-muted); }
+.global-search-hint { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; flex-shrink: 0; }
+.global-results { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; z-index: 400; box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-height: 300px; overflow-y: auto; }
+.global-result-item { padding: 10px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); font-size: 12px; transition: background 0.1s; }
+.global-result-item:last-child { border-bottom: none; }
+.global-result-item:hover { background: var(--surface3); }
+.global-result-type { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+.global-result-type.club { background: rgba(255,99,0,0.15); color: var(--accent); }
+.global-result-type.team { background: rgba(10,147,245,0.15); color: var(--accent-blue); }
+.global-result-org { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+/* CHARTS */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 22px; position: relative; overflow: hidden; }
+.chart-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+.chart-card.full { grid-column: 1 / -1; }
+.card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text); margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 18px; }
+
+/* MAU CONTROLS */
+.mau-controls { margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+.mau-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.toggle-group { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+.toggle-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all 0.15s; }
+.toggle-btn.active { background: var(--accent); color: #fff; }
+.club-search-wrap { position: relative; flex: 1; min-width: 180px; max-width: 300px; }
+.club-search-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 12px; padding: 6px 12px; border-radius: 5px; outline: none; transition: border-color 0.2s; }
+.club-search-input:focus { border-color: var(--accent); }
+.club-search-input::placeholder { color: var(--text-muted); }
+.club-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 200; display: none; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.club-dropdown.open { display: block; }
+.dd-item { padding: 8px 12px; font-size: 12px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.1s; }
+.dd-item:hover { background: var(--surface3); }
+.dd-check { width: 13px; height: 13px; border: 1px solid var(--border-light); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; }
+.dd-item.selected .dd-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.club-tag { display: flex; align-items: center; gap: 5px; padding: 3px 8px 3px 7px; border-radius: 3px; font-size: 11px; font-weight: 500; border: 1px solid transparent; transition: opacity 0.15s; }
+.club-tag:hover { opacity: 0.7; }
+.tag-x { cursor: pointer; font-size: 13px; line-height: 1; margin-left: 2px; }
+.clear-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 5px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* LEADERBOARD */
+.lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.lb-row:last-child { border-bottom: none; }
+.lb-row:hover { background: rgba(255,99,0,0.04); margin: 0 -22px; padding: 8px 22px; }
+.lb-rank { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--text-dim); width: 26px; flex-shrink: 0; text-align: center; }
+.lb-rank.gold { color: var(--gold); }
+.lb-rank.silver { color: #b1bcc4; }
+.lb-rank.bronze { color: #cd7c4a; }
+.lb-name { flex: 1; font-size: 12px; font-weight: 600; color: var(--text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+.lb-value { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); width: 44px; text-align: right; flex-shrink: 0; }
+.lb-trend { font-size: 10px; font-weight: 600; flex-shrink: 0; width: 34px; text-align: right; }
+.lb-trend.up { color: var(--green); }
+.lb-trend.down { color: var(--red); }
+.lb-trend.flat { color: var(--text-dim); }
+
+/* SCORE BADGE */
+.score-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 20px; border-radius: 3px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.score-high { background: rgba(52,211,153,0.15); color: var(--green); }
+.score-mid { background: rgba(245,158,11,0.15); color: var(--gold); }
+.score-low { background: rgba(248,113,113,0.15); color: var(--red); }
+
+/* TABLE */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: visible; }
+.table-top { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.table-title { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.table-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.search-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 12px; padding: 6px 12px; border-radius: 5px; width: 190px; outline: none; transition: border-color 0.2s; }
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-muted); }
+.btn { border: none; cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 6px 14px; border-radius: 5px; transition: opacity 0.2s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.85; }
+.btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.table-scroll { overflow-x: auto; overflow-y: visible; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; overflow: visible; }
+thead { position: relative; z-index: 200; }
+thead th { padding: 9px 16px; text-align: left; font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; user-select: none; background: var(--surface2); overflow: visible; }
+thead th:first-child { width: 52px; padding: 9px 10px; text-align: center; }
+thead th:hover { color: var(--accent); }
+.th-tooltip { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; background: var(--surface3); border: 1px solid var(--border-light); border-radius: 50%; font-size: 8px; font-weight: 700; color: var(--text-muted); cursor: default; position: relative; margin-left: 4px; vertical-align: middle; }
+.th-tooltip:hover { border-color: var(--accent); color: var(--accent); }
+.th-tooltip-text { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--hudl-dark-ink); border: 1px solid var(--border-light); border-radius: 6px; padding: 10px 14px; font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--text); width: 220px; white-space: normal; line-height: 1.5; box-shadow: 0 8px 24px rgba(0,0,0,0.7); z-index: 9999; pointer-events: none; }
+.th-tooltip:hover .th-tooltip-text { display: block; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,99,0,0.04); }
+tbody td { padding: 10px 16px; }
+td.club-name-cell { font-weight: 600; font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--text-muted); }
+.bar-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.mini-bar { width: 50px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.mini-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+.view-row-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.view-row-btn:hover { border-color: var(--accent); color: var(--accent); }
+.snapshot-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(10,147,245,0.1); border: 1px solid rgba(10,147,245,0.2); border-radius: 3px; padding: 2px 7px; font-size: 9px; font-weight: 600; letter-spacing: 0.5px; color: var(--accent-blue); white-space: nowrap; }
+.pagination { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-muted); background: var(--surface2); border-radius: 0 0 8px 8px; }
+.pg-btns { display: flex; gap: 6px; }
+.pg-btn { background: var(--surface3); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 11px; padding: 4px 12px; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+.pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.pg-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* PANEL */
+.panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.25s; backdrop-filter: blur(4px); }
+.panel-overlay.open { opacity: 1; pointer-events: all; }
+.club-panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(720px, 100vw); background: var(--hudl-dark-ink); border-left: 1px solid var(--border); z-index: 600; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; overflow: hidden; }
+.club-panel.open { transform: translateX(0); }
+.club-panel.fullscreen { width: 100vw; left: 0; border-left: none; }
+.club-panel.fullscreen .panel-body { padding: 24px 48px; }
+.club-panel.fullscreen .panel-header { padding: 20px 48px; }
+.club-panel.fullscreen .panel-tabs { padding: 0 48px; }
+.panel-expand { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.panel-expand:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.panel-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; background: var(--hudl-black); flex-shrink: 0; position: relative; }
+.panel-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-blue), transparent); }
+.panel-club-name { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; line-height: 1.1; }
+.panel-close { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.panel-close:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Panel tabs */
+.panel-tabs { display: flex; background: var(--hudl-black); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.panel-tab { padding: 10px 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.panel-tab:hover:not(.active) { color: var(--text); }
+
+.panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+.panel-tab-content { display: none; flex-direction: column; gap: 20px; }
+.panel-tab-content.active { display: flex; }
+
+/* Panel stat grid */
+.club-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 6px; overflow: hidden; }
+.club-stat { background: var(--surface2); padding: 14px 16px; }
+.cs-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+.cs-value { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: var(--accent); }
+.cs-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+.panel-chart-title { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; }
+.type-bars { display: flex; flex-direction: column; gap: 8px; }
+.type-bar-row { display: flex; align-items: center; gap: 10px; }
+.type-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); width: 65px; flex-shrink: 0; }
+.type-bar-track { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.type-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.type-count { font-size: 11px; font-variant-numeric: tabular-nums; color: var(--text); width: 40px; text-align: right; }
+
+/* Panel teams table */
+.teams-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.teams-table th { position: sticky; top: 0; z-index: 10; padding: 7px 10px; text-align: left; font-size: 8px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--surface3); white-space: nowrap; cursor: pointer; user-select: none; }
+.teams-table th:hover { color: var(--accent); }
+.teams-table th:not(:first-child) { text-align: right; }
+.teams-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+.teams-table td:not(:first-child) { text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.teams-table tr:last-child td { border-bottom: none; }
+.teams-table tr:hover td { background: rgba(255,99,0,0.03); }
+.team-name-cell { font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gender-sport-pill { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 2px; background: var(--surface3); color: var(--text-dim); margin-left: 4px; }
+
+/* FOOTER */
+footer { padding: 18px 36px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: var(--hudl-dark-ink); }
+footer p { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+.footer-brand { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
+.footer-brand span { color: var(--accent); font-weight: 600; }
+
+/* LOADING */
+#loadingOverlay { position: fixed; inset: 0; background: var(--hudl-black); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+.loading-logo { display: flex; align-items: center; gap: 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 48px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+.loading-logo .lo { color: var(--text); } .loading-logo .vb { color: var(--accent); }
+.loading-logo .sep { width: 2px; height: 44px; background: var(--border-light); }
+.loading-logo .hu { color: var(--accent); } .loading-logo .dl { color: var(--text); }
+.loading-bar-track { width: 180px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.loading-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; animation: loadBar 1.4s ease-in-out infinite; }
+@keyframes loadBar { 0% { width: 0; margin-left: 0; } 50% { width: 60%; margin-left: 20%; } 100% { width: 0; margin-left: 100%; } }
+.loading-text { font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
+#loadingError { display: none; color: var(--red); font-size: 12px; max-width: 400px; text-align: center; line-height: 1.7; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.chart-card, .table-card { animation: fadeUp 0.4s ease both; }
+
+@media (max-width: 1000px) {
+  .header-stats { grid-template-columns: repeat(3, 1fr); }
+  .main { padding: 16px 20px; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .chart-card.full { grid-column: 1; }
+}
 </style>
 </head>
 <body>
-<div class="everything">
 
-  <header>
-    <div class="logo-area">
-      <h1>LOVB<span>×</span>HUDL</h1>
-      <p>Platform Usage Dashboard</p>
-    </div>
-    <div class="header-meta">
-      <div class="date-badge" id="reportDate">Loading...</div>
-    </div>
-  </header>
+<div id="loadingOverlay">
+  <div class="loading-logo"><span class="lo">LO</span><span class="vb">VB</span><div class="sep"></div><span class="hu">HU</span><span class="dl">DL</span></div>
+  <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+  <div class="loading-text">Loading latest club data…</div>
+  <div id="loadingError"></div>
+</div>
 
-  <!-- HERO STATS -->
-  <div class="hero-stats">
-    <div class="stat-block">
-      <div class="stat-label">Total Videos Uploaded</div>
-      <div class="stat-number">16,475</div>
-      <div class="stat-sub">Across all LOVB clubs</div>
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="club-panel" id="clubPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-club-name" id="panelClubName">Club</div>
+
     </div>
-    <div class="stat-block">
-      <div class="stat-label">Active Clubs</div>
-      <div class="stat-number" id="activeClubs">—</div>
-      <div class="stat-sub">Uploading video content</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-label">Monthly Active Users</div>
-      <div class="stat-number" id="latestMAU">—</div>
-      <div class="stat-sub">Most recent month</div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button class="panel-expand" id="panelExpandBtn" onclick="togglePanelFullscreen()" title="Expand to full screen">⤢</button>
+      <button class="panel-close" onclick="closePanel()">✕</button>
     </div>
   </div>
+  <div class="panel-tabs">
+    <div class="panel-tab active" onclick="switchPanelTab('overview')">Overview</div>
+    <div class="panel-tab" onclick="switchPanelTab('teams')">Teams</div>
+    <div class="panel-tab" onclick="switchPanelTab('score')">Activity Ratio</div>
+  </div>
+  <div class="panel-body">
 
-  <div class="main">
-
-    <!-- CHARTS -->
-    <div>
-      <div class="section-title">Visuals</div>
-      <div class="charts-grid">
-
-        <!-- Top Clubs by Videos -->
-        <div class="chart-card">
-          <h3>Top 15 Clubs by Videos Uploaded</h3>
-          <div class="chart-sub">All-time total video uploads per club</div>
-          <div class="chart-wrap"><canvas id="topClubsChart" height="320"></canvas></div>
+    <!-- OVERVIEW TAB -->
+    <div class="panel-tab-content active" id="panelTabOverview">
+      <div class="club-stats-grid">
+        <div class="club-stat">
+          <div class="cs-label">Total Videos</div>
+          <div class="cs-value" id="panelTotal">—</div>
+          <div class="cs-sub">All time</div>
         </div>
-
-        <!-- Video Type Breakdown -->
-        <div class="chart-card">
-          <h3>Games vs. Practices by Club</h3>
-          <div class="chart-sub">Top 15 clubs — stacked by video type</div>
-          <div class="chart-wrap"><canvas id="videoTypeChart" height="320"></canvas></div>
+        <div class="club-stat">
+          <div class="cs-label">Teams on Hudl</div>
+          <div class="cs-value" id="panelTeamCount" style="color:var(--accent-blue)">—</div>
+          <div class="cs-sub">Active teams</div>
         </div>
-
-        <!-- MAU over time -->
-        <div class="chart-card full-width">
-          <h3>Monthly Active Users Over Time</h3>
-          <div class="chart-sub" id="mauSubtitle">Showing total MAU across all clubs — search to zoom in or compare</div>
-          <div class="mau-controls">
-            <div class="mau-controls-top">
-              <div class="mau-mode-btns">
-                <button id="modeAllBtn" class="active" onclick="setMode('all')">All Clubs</button>
-                <button id="modeSelectBtn" onclick="setMode('select')">Compare Clubs</button>
-              </div>
-              <div class="club-search-wrap" id="searchWrap" style="display:none">
-                <input class="club-search-input" id="clubSearchInput" placeholder="Search and add a club…" autocomplete="off" oninput="filterDropdown()" onfocus="openDropdown()" />
-                <div class="club-dropdown" id="clubDropdown"></div>
-              </div>
-              <button class="clear-all-btn" id="clearAllBtn" style="display:none" onclick="clearAllClubs()">✕ Clear all</button>
-            </div>
-            <div class="selected-clubs" id="selectedClubs"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="mauChart" height="200"></canvas></div>
+        <div class="club-stat">
+          <div class="cs-label">Latest MAU</div>
+          <div class="cs-value" id="panelMAU" style="color:var(--text)">—</div>
+          <div class="cs-sub" id="panelMAUMonth">—</div>
         </div>
-
+        <div class="club-stat">
+          <div class="cs-label">Highlights Created</div>
+          <div class="cs-value" id="panelHighlights" style="color:var(--green)">—</div>
+          <div class="cs-sub">Jul 2025 – Feb 2026</div>
+        </div>
+        <div class="club-stat">
+          <div class="cs-label">Recruitable Athletes</div>
+          <div class="cs-value" id="panelRecruits" style="color:var(--gold)">—</div>
+          <div class="cs-sub">Jul 2025 – Feb 2026</div>
+        </div>
+        <div class="club-stat">
+          <div class="cs-label">Playlists Created</div>
+          <div class="cs-value" id="panelPlaylists" style="color:var(--accent-blue)">—</div>
+          <div class="cs-sub">Jul 2025 – Feb 2026</div>
+        </div>
+      </div>
+      <div>
+        <div class="panel-chart-title">Video Type Breakdown</div>
+        <div class="type-bars" id="panelTypeBars"></div>
+      </div>
+      <div>
+        <div class="panel-chart-title">Monthly Active Users — Trend</div>
+        <canvas id="panelMauChart" height="100"></canvas>
       </div>
     </div>
 
-    <!-- RAW DATA TABLE -->
-    <div>
-      <div class="section-title">Raw Data</div>
-      <div class="table-section">
-        <div class="table-header">
-          <h3>Club-by-Club Breakdown</h3>
-          <div class="table-controls">
-            <input type="text" class="search-box" id="tableSearch" placeholder="Search clubs..." oninput="filterTable()">
-            <button class="btn-download" onclick="downloadCSV()">
-              ↓ Download CSV
-            </button>
+    <!-- TEAMS TAB -->
+    <div class="panel-tab-content" id="panelTabTeams">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;color:var(--text-muted)">All teams for this club</div>
+        <span class="snapshot-badge">📅 Jul 2025 – Feb 2026 cumulative for engagement metrics</span>
+      </div>
+      <div style="overflow-x:auto;overflow-y:auto;max-height:420px;">
+        <table class="teams-table">
+          <thead>
+            <tr>
+              <th onclick="sortPanelTeams('teamName')">Team <span id="panelTeamSort_teamName"></span></th>
+              <th onclick="sortPanelTeams('total')" style="text-align:right">Videos <span id="panelTeamSort_total"></span></th>
+              <th onclick="sortPanelTeams('games')" style="text-align:right">Games <span id="panelTeamSort_games"></span></th>
+              <th onclick="sortPanelTeams('practices')" style="text-align:right">Practices <span id="panelTeamSort_practices"></span></th>
+              <th onclick="sortPanelTeams('mau')" style="text-align:right">MAU <span id="panelTeamSort_mau"></span></th>
+              <th onclick="sortPanelTeams('highlights')" style="text-align:right">Highlights <span id="panelTeamSort_highlights"></span></th>
+              <th onclick="sortPanelTeams('playlists')" style="text-align:right">Playlists <span id="panelTeamSort_playlists"></span></th>
+              <th onclick="sortPanelTeams('recruitable')" style="text-align:right">Recruitable <span id="panelTeamSort_recruitable"></span></th>
+            </tr>
+          </thead>
+          <tbody id="panelTeamsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCORE TAB -->
+    <div class="panel-tab-content" id="panelTabScore">
+      <div style="display:block;margin-bottom:14px;"><div style="display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+        <div style="background:var(--surface2);padding:8px 12px;display:flex;align-items:center;gap:12px;min-width:160px;">
+          <div>
+            <div class="cs-label" style="margin-bottom:1px">MAU per Team</div>
+            <div class="cs-sub" style="margin-top:0">Active users ÷ teams</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent-blue);margin-left:auto;" id="panelMauPerTeam">—</div>
+        </div>
+        <div style="background:var(--surface2);padding:8px 12px;display:flex;align-items:center;gap:12px;min-width:160px;border-left:1px solid var(--border);">
+          <div>
+            <div class="cs-label" style="margin-bottom:1px">Video Adoption</div>
+            <div class="cs-sub" style="margin-top:0">% of teams with uploads</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);margin-left:auto;" id="panelVideoAdoption">—</div>
+        </div>
+      </div></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px;">How this club compares</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="panelRatioComparison"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.6;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;">
+        <strong style="color:var(--text-muted);display:block;margin-bottom:4px;">Why this matters</strong>
+        Raw video and MAU counts favor larger clubs with more teams. These ratios normalize for club size so you can compare engagement fairly across all 53 LOVB clubs.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="header-brand">
+      <div class="brand-lockup">
+        <div class="brand-lovb">LOVB</div>
+        <div class="brand-x"></div>
+        <div class="brand-hudl">HUDL</div>
+      </div>
+      <div class="brand-sub">Club Usage Dashboard</div>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="hs-label">Total Videos</div>
+        <div class="hs-value" id="statVideos">—</div>
+        <div class="hs-sub">Across all LOVB clubs</div>
+      </div>
+      <div class="header-stat">
+        <div class="hs-label">Active Clubs</div>
+        <div class="hs-value" id="statClubs">—</div>
+        <div class="hs-sub">Uploading video content</div>
+      </div>
+      <div class="header-stat">
+        <div class="hs-label">Monthly Active Users</div>
+        <div class="hs-value" id="statMAU">—</div>
+        <div class="hs-sub" id="statMAUSub">Most recent month</div>
+      </div>
+      <div class="header-stat">
+        <div class="hs-label">Highlights Created</div>
+        <div class="hs-value" id="statHighlights">—</div>
+        <div class="hs-sub">Jul 2025 – Feb 2026</div>
+      </div>
+      <div class="header-stat">
+        <div class="hs-label">Recruitable Athletes</div>
+        <div class="hs-value" id="statRecruits">—</div>
+        <div class="hs-sub">Jul 2025 – Feb 2026</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="date-pill" id="datePill">Loading…</div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewClubs" onclick="setView('clubs')">Clubs</button>
+        <button class="view-btn" id="viewTeams" onclick="setView('teams')">Teams</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- GLOBAL SEARCH -->
+    <div class="global-search-wrap">
+      <div class="global-search-box">
+        <svg width="15" height="15" fill="none" stroke="var(--text-muted)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="global-search-input" id="globalSearch" placeholder="Search any club or team to open their profile…" autocomplete="off" oninput="filterGlobalSearch()" onfocus="showGlobalResults()" />
+        <span class="global-search-hint">↵ to open</span>
+      </div>
+      <div class="global-results" id="globalResults"></div>
+    </div>
+
+    <!-- CLUB VIEW -->
+    <div id="clubView">
+      <div>
+        <div class="section-label">Overview</div>
+        <div class="charts-grid">
+
+          <div class="chart-card">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+              <div>
+                <div class="card-title">Top 15 Clubs — Videos Uploaded</div>
+                <div class="card-sub" style="margin-bottom:0">All-time · click a bar to view club detail</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);"><div style="width:9px;height:9px;border-radius:2px;background:#0a93f5"></div>Games</div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted);"><div style="width:9px;height:9px;border-radius:2px;background:#ff6300"></div>Practices</div>
+              </div>
+            </div>
+            <canvas id="topClubsChart" height="320"></canvas>
+          </div>
+
+          <div class="chart-card" style="display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <div>
+                <div class="card-title">Club Leaderboard — Top 15</div>
+                <div class="card-sub" style="margin-bottom:0" id="leaderboardSub">Ranked by latest monthly active users</div>
+              </div>
+              <div class="toggle-group">
+                <button class="toggle-btn active" id="lbModeMAU" onclick="setLeaderboard('mau')">By MAU</button>
+                <button class="toggle-btn" id="lbModeVideos" onclick="setLeaderboard('videos')">By Videos</button>
+              </div>
+            </div>
+            <div id="leaderboardList" style="display:flex;flex-direction:column;flex:1;"></div>
+          </div>
+
+          <div class="chart-card full">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+              <div>
+                <div class="card-title">Monthly Active Users Over Time</div>
+                <div class="card-sub" id="mauSub" style="margin-bottom:0">Total MAU across all clubs</div>
+              </div>
+            </div>
+            <div class="mau-controls">
+              <div class="mau-top">
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="modeAll" onclick="setMode('all')">All Clubs</button>
+                  <button class="toggle-btn" id="modeCompare" onclick="setMode('compare')">Compare Clubs</button>
+                </div>
+                <div class="club-search-wrap" id="searchWrap" style="display:none">
+                  <input class="club-search-input" id="clubSearch" placeholder="Search clubs to add…" autocomplete="off" oninput="filterDd()" onfocus="openDd()" />
+                  <div class="club-dropdown" id="clubDd"></div>
+                </div>
+                <button class="clear-btn" id="clearBtn" style="display:none" onclick="clearClubs()">✕ Clear</button>
+              </div>
+              <div class="tags-row" id="tagsRow"></div>
+            </div>
+            <canvas id="mauChart" height="150"></canvas>
+          </div>
+
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Club Data</div>
+        <div class="table-card">
+          <div class="table-top">
+            <div class="table-title">All Clubs</div>
+            <div class="table-controls">
+              <input type="text" class="search-input" id="tableSearch" placeholder="Search clubs…" oninput="filterTable()">
+              <button class="btn btn-ghost" onclick="downloadCSV()">↓ Download CSV</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortBy('rank')">
+                    Rank
+                    <span class="th-tooltip">?<span class="th-tooltip-text">Ranked #1–53 by total videos uploaded. #1 = most videos.</span></span>
+                  </th>
+                  <th onclick="sortBy('name')">Club</th>
+                  <th onclick="sortBy('teams')" style="text-align:right">Teams</th>
+                  <th onclick="sortBy('total')" style="text-align:right">Videos</th>
+                  <th onclick="sortBy('mau')" style="text-align:right">MAU</th>
+                  <th onclick="sortBy('highlights')" style="text-align:right">Highlights <span class="snapshot-badge">Jul–Feb</span></th>
+                  <th onclick="sortBy('recruitable')" style="text-align:right">Recruitable <span class="snapshot-badge">Jul–Feb</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span id="pgInfo"></span>
+            <div class="pg-btns">
+              <button class="pg-btn" id="prevBtn" onclick="changePg(-1)">← Prev</button>
+              <button class="pg-btn" id="nextBtn" onclick="changePg(1)">Next →</button>
+            </div>
           </div>
         </div>
-        <div class="table-scroll">
-          <table id="dataTable">
-            <thead>
-              <tr>
-                <th onclick="sortTable('name')">Club</th>
-                <th onclick="sortTable('total')" style="text-align:right">Total Videos</th>
-                <th onclick="sortTable('games')" style="text-align:right">Games</th>
-                <th onclick="sortTable('practices')" style="text-align:right">Practices</th>
-                <th onclick="sortTable('mau')" style="text-align:right">Latest MAU</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-        <div class="pagination">
-          <span id="paginationInfo"></span>
-          <div class="pagination-btns">
-            <button class="pg-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
-            <button class="pg-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+
+    <!-- TEAM VIEW -->
+    <div id="teamView" style="display:none;">
+      <div>
+        <div class="section-label">Team Data <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-dim);margin-left:8px;">Engagement metrics: Jul 2025 – Feb 2026 cumulative</span></div>
+        <div class="table-card">
+          <div class="table-top">
+            <div class="table-title">All Teams</div>
+            <div class="table-controls">
+              <input type="text" class="search-input" id="teamSearch" placeholder="Search teams or clubs…" oninput="filterTeamTable()">
+              <button class="btn btn-ghost" onclick="downloadTeamCSV()">↓ Download CSV</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortTeamBy('org')">Club</th>
+                  <th onclick="sortTeamBy('name')">Team</th>
+                  <th onclick="sortTeamBy('total')" style="text-align:right">Videos</th>
+                  <th onclick="sortTeamBy('games')" style="text-align:right">Games</th>
+                  <th onclick="sortTeamBy('practices')" style="text-align:right">Practices</th>
+                  <th onclick="sortTeamBy('mau')" style="text-align:right">MAU</th>
+                  <th onclick="sortTeamBy('highlights')" style="text-align:right">Highlights</th>
+                  <th onclick="sortTeamBy('playlists')" style="text-align:right">Playlists</th>
+                  <th onclick="sortTeamBy('recruitable')" style="text-align:right">Recruitable</th>
+                </tr>
+              </thead>
+              <tbody id="teamTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span id="teamPgInfo"></span>
+            <div class="pg-btns">
+              <button class="pg-btn" id="teamPrevBtn" onclick="changeTeamPg(-1)">← Prev</button>
+              <button class="pg-btn" id="teamNextBtn" onclick="changeTeamPg(1)">Next →</button>
+            </div>
           </div>
         </div>
       </div>
@@ -717,687 +585,828 @@
   </div>
 
   <footer>
-    <p>Data sourced from Hudl · LOVB Partner Dashboard</p>
-    <div class="powered-by">Powered by <span>Hudl Analytics</span></div>
+    <p>Data updated weekly from Hudl · Engagement: Jul 2025 – Feb 2026 cumulative · LOVB Partner Dashboard · View only</p>
+    <div class="footer-brand">Powered by <span>Hudl Analytics</span></div>
   </footer>
-
 </div>
 
 <script>
 // ============================================================
-// DATA
+// DATA SOURCES
 // ============================================================
+const SHEET_ID = '1m5QwFHg5js22qK75c0T-UZMMzqKwYBrSynZIVQnQZ3A';
+const sheetUrl = tab => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
 
-const videosByClub = [
-  {name:"A5 Volleyball Club",total:1268,games:1237,practices:26},
-  {name:"Kokoro Volleyball",total:882,games:879,practices:1},
-  {name:"Houston Skyline Jr's",total:869,games:805,practices:55},
-  {name:"Albuquerque Rebels Volleyball Club",total:795,games:776,practices:16},
-  {name:"Athena VBC",total:716,games:672,practices:42},
-  {name:"Rockstar Volleyball",total:642,games:620,practices:17},
-  {name:"Red Rock Volleyball",total:614,games:571,practices:24},
-  {name:"Game Point Volleyball",total:538,games:535,practices:2},
-  {name:"JJVA Jacksonville Juniors Volleyball Association",total:534,games:530,practices:4},
-  {name:"SMASH Volleyball Club",total:518,games:503,practices:15},
-  {name:"Austin Junior Volleyball",total:484,games:483,practices:0},
-  {name:"Tstreet Volleyball Club",total:469,games:461,practices:8},
-  {name:"Union Volleyball",total:463,games:455,practices:3},
-  {name:"Madtown Volleyball",total:448,games:435,practices:13},
-  {name:"Premier Nebraska Volleyball",total:431,games:428,practices:2},
-  {name:"RockCity Volleyball",total:419,games:412,practices:7},
-  {name:"Spike & Serve Volleyball Club",total:410,games:392,practices:18},
-  {name:"Boomers Volleyball Academy",total:398,games:395,practices:3},
-  {name:"One Wisconsin VBC",total:374,games:358,practices:15},
-  {name:"KC Power",total:360,games:351,practices:9},
-  {name:"Colorado Juniors",total:356,games:352,practices:4},
-  {name:"Aspire Volleyball",total:319,games:318,practices:0},
-  {name:"Platform Elite Volleyball",total:311,games:310,practices:0},
-  {name:"M1 Volleyball",total:301,games:295,practices:6},
-  {name:"Colorado Volleyball Association",total:295,games:293,practices:1},
-  {name:"Roots Volleyball",total:272,games:271,practices:1},
-  {name:"Iowa Impact Volleyball Club",total:268,games:267,practices:0},
-  {name:"Iowa United Volleyball",total:252,games:247,practices:5},
-  {name:"DaKine Volleyball Club",total:231,games:229,practices:0},
-  {name:"East Coast Volleyball Club",total:225,games:223,practices:2},
-  {name:"Lexington United Volleyball",total:211,games:208,practices:2},
-  {name:"FC Elite",total:206,games:205,practices:1},
-  {name:"Meraki Volleyball",total:158,games:116,practices:22},
-  {name:"Gainesville Juniors",total:149,games:149,practices:0},
-  {name:"DG Warriors",total:147,games:146,practices:0},
-  {name:"Rhythm Volleyball Academy",total:145,games:141,practices:4},
-  {name:"Elite Volleyball Training Center",total:117,games:116,practices:1},
-  {name:"513 Volleyball",total:111,games:110,practices:0},
-  {name:"Seal Beach Volleyball Club",total:110,games:110,practices:0},
-  {name:"Atlanta Extreme Volleyball Club",total:108,games:104,practices:3},
-  {name:"Northern Nevada Juniors Volleyball Club",total:101,games:93,practices:8},
-  {name:"Team Detroit",total:84,games:83,practices:1},
-  {name:"Salt City Boys (LOVB)",total:74,games:74,practices:0},
-  {name:"Maverick Volleyball Club",total:73,games:72,practices:1},
-  {name:"Reign Volleyball",total:72,games:71,practices:1},
-  {name:"Club 801 Volleyball",total:56,games:54,practices:2},
-  {name:"1 Flight Volleyball Club",total:52,games:52,practices:0},
-  {name:"Evansville United",total:44,games:44,practices:0},
-];
-
-const mauRaw = [
-  ["2026-02-01",94102,"A5 Volleyball Club",643],
-  ["2026-02-01",55517,"Houston Skyline Jr's",489],
-  ["2026-02-01",173983,"Kokoro Volleyball",361],
-  ["2026-02-01",99864,"Rockstar Volleyball",335],
-  ["2026-02-01",109361,"Red Rock Volleyball",300],
-  ["2026-02-01",114603,"Athena VBC",279],
-  ["2026-02-01",134570,"Albuquerque Rebels Volleyball Club",263],
-  ["2026-02-01",139501,"Tstreet Volleyball Club",259],
-  ["2026-02-01",111593,"SMASH Volleyball Club",237],
-  ["2026-02-01",164392,"Madtown Volleyball",237],
-  ["2026-02-01",73108,"Premier Nebraska Volleyball",235],
-  ["2026-02-01",63032,"Austin Junior Volleyball",208],
-  ["2026-02-01",76107,"JJVA Jacksonville Juniors Volleyball Association",199],
-  ["2026-02-01",158985,"RockCity Volleyball",195],
-  ["2026-02-01",165386,"Game Point Volleyball",194],
-  ["2026-02-01",59350,"KC Power",172],
-  ["2026-02-01",171158,"Union Volleyball",170],
-  ["2026-02-01",90231,"Aspire Volleyball",155],
-  ["2026-02-01",140985,"Colorado Volleyball Association",149],
-  ["2026-02-01",95481,"Boomers Volleyball Academy",147],
-  ["2026-02-01",116594,"One Wisconsin VBC",145],
-  ["2026-02-01",35479,"Spike & Serve Volleyball Club",141],
-  ["2026-02-01",140376,"Platform Elite Volleyball",138],
-  ["2026-02-01",184990,"M1 Volleyball",124],
-  ["2026-02-01",139175,"Roots Volleyball",119],
-  ["2026-02-01",99313,"Colorado Juniors",118],
-  ["2026-02-01",141441,"Lexington United Volleyball",109],
-  ["2026-02-01",116865,"FC Elite",105],
-  ["2026-02-01",138078,"DaKine Volleyball Club",97],
-  ["2026-02-01",191038,"Iowa United Volleyball",95],
-  ["2026-02-01",165908,"East Coast Volleyball Club",94],
-  ["2026-02-01",191254,"Rhythm Volleyball Academy",93],
-  ["2026-02-01",191031,"Iowa Impact Volleyball Club",84],
-  ["2026-02-01",173418,"DG Warriors",79],
-  ["2026-02-01",165821,"Seal Beach Volleyball Club",79],
-  ["2026-02-01",158892,"Gainesville Juniors",68],
-  ["2026-02-01",113057,"Meraki Volleyball",64],
-  ["2026-02-01",191036,"513 Volleyball",57],
-  ["2026-02-01",140645,"Atlanta Extreme Volleyball Club",50],
-  ["2026-02-01",185710,"Reign Volleyball",45],
-  ["2026-02-01",158700,"Club 801 Volleyball",43],
-  ["2026-02-01",140761,"Elite Volleyball Training Center",41],
-  ["2026-02-01",141012,"Team Detroit",38],
-  ["2026-02-01",191233,"Maverick Volleyball Club",32],
-  ["2026-02-01",186069,"Northern Nevada Juniors Volleyball Club",32],
-  ["2026-02-01",192580,"1 Flight Volleyball Club",26],
-  ["2026-02-01",142105,"Evansville United",25],
-  ["2026-02-01",190920,"Salt City Boys (LOVB)",15],
-  ["2026-02-01",191104,"Georgia Beach Volleyball",4],
-  ["2026-01-01",94102,"A5 Volleyball Club",712],
-  ["2026-01-01",55517,"Houston Skyline Jr's",543],
-  ["2026-01-01",173983,"Kokoro Volleyball",438],
-  ["2026-01-01",99864,"Rockstar Volleyball",421],
-  ["2026-01-01",109361,"Red Rock Volleyball",341],
-  ["2026-01-01",114603,"Athena VBC",321],
-  ["2026-01-01",134570,"Albuquerque Rebels Volleyball Club",294],
-  ["2026-01-01",139501,"Tstreet Volleyball Club",272],
-  ["2026-01-01",111593,"SMASH Volleyball Club",238],
-  ["2026-01-01",73108,"Premier Nebraska Volleyball",225],
-  ["2026-01-01",165386,"Game Point Volleyball",221],
-  ["2026-01-01",164392,"Madtown Volleyball",215],
-  ["2026-01-01",63032,"Austin Junior Volleyball",209],
-  ["2026-01-01",35479,"Spike & Serve Volleyball Club",209],
-  ["2026-01-01",76107,"JJVA Jacksonville Juniors Volleyball Association",205],
-  ["2026-01-01",158985,"RockCity Volleyball",193],
-  ["2026-01-01",59350,"KC Power",193],
-  ["2026-01-01",171158,"Union Volleyball",189],
-  ["2026-01-01",90231,"Aspire Volleyball",183],
-  ["2026-01-01",140985,"Colorado Volleyball Association",163],
-  ["2026-01-01",140376,"Platform Elite Volleyball",154],
-  ["2026-01-01",95481,"Boomers Volleyball Academy",142],
-  ["2026-01-01",139175,"Roots Volleyball",133],
-  ["2026-01-01",184990,"M1 Volleyball",133],
-  ["2026-01-01",116865,"FC Elite",125],
-  ["2026-01-01",99313,"Colorado Juniors",124],
-  ["2026-01-01",116594,"One Wisconsin VBC",121],
-  ["2026-01-01",165908,"East Coast Volleyball Club",118],
-  ["2026-01-01",141441,"Lexington United Volleyball",116],
-  ["2026-01-01",191031,"Iowa Impact Volleyball Club",113],
-  ["2026-01-01",191038,"Iowa United Volleyball",100],
-  ["2026-01-01",138078,"DaKine Volleyball Club",95],
-  ["2026-01-01",191254,"Rhythm Volleyball Academy",87],
-  ["2026-01-01",165821,"Seal Beach Volleyball Club",78],
-  ["2026-01-01",173418,"DG Warriors",74],
-  ["2026-01-01",158892,"Gainesville Juniors",73],
-  ["2026-01-01",140645,"Atlanta Extreme Volleyball Club",70],
-  ["2026-01-01",113057,"Meraki Volleyball",66],
-  ["2026-01-01",191233,"Maverick Volleyball Club",60],
-  ["2026-01-01",191036,"513 Volleyball",60],
-  ["2026-01-01",140761,"Elite Volleyball Training Center",51],
-  ["2026-01-01",186069,"Northern Nevada Juniors Volleyball Club",49],
-  ["2026-01-01",141012,"Team Detroit",47],
-  ["2026-01-01",158700,"Club 801 Volleyball",46],
-  ["2026-01-01",190920,"Salt City Boys (LOVB)",38],
-  ["2026-01-01",192580,"1 Flight Volleyball Club",31],
-  ["2026-01-01",142105,"Evansville United",30],
-  ["2026-01-01",185710,"Reign Volleyball",13],
-  ["2025-12-01",94102,"A5 Volleyball Club",459],
-  ["2025-12-01",55517,"Houston Skyline Jr's",360],
-  ["2025-12-01",99864,"Rockstar Volleyball",347],
-  ["2025-12-01",111593,"SMASH Volleyball Club",230],
-  ["2025-12-01",114603,"Athena VBC",209],
-  ["2025-12-01",165386,"Game Point Volleyball",206],
-  ["2025-12-01",35479,"Spike & Serve Volleyball Club",192],
-  ["2025-12-01",134570,"Albuquerque Rebels Volleyball Club",182],
-  ["2025-12-01",139501,"Tstreet Volleyball Club",182],
-  ["2025-12-01",76107,"JJVA Jacksonville Juniors Volleyball Association",172],
-  ["2025-12-01",63032,"Austin Junior Volleyball",140],
-  ["2025-12-01",73108,"Premier Nebraska Volleyball",137],
-  ["2025-12-01",95481,"Boomers Volleyball Academy",122],
-  ["2025-12-01",139175,"Roots Volleyball",98],
-  ["2025-12-01",171158,"Union Volleyball",91],
-  ["2025-12-01",59350,"KC Power",85],
-  ["2025-12-01",99313,"Colorado Juniors",83],
-  ["2025-12-01",109361,"Red Rock Volleyball",70],
-  ["2025-12-01",90231,"Aspire Volleyball",69],
-  ["2025-12-01",165821,"Seal Beach Volleyball Club",62],
-  ["2025-12-01",113057,"Meraki Volleyball",57],
-  ["2025-12-01",158892,"Gainesville Juniors",56],
-  ["2025-12-01",165908,"East Coast Volleyball Club",46],
-  ["2025-12-01",190920,"Salt City Boys (LOVB)",43],
-  ["2025-12-01",116594,"One Wisconsin VBC",40],
-  ["2025-12-01",158985,"RockCity Volleyball",36],
-  ["2025-12-01",140985,"Colorado Volleyball Association",34],
-  ["2025-12-01",173983,"Kokoro Volleyball",33],
-  ["2025-12-01",141441,"Lexington United Volleyball",32],
-  ["2025-12-01",191036,"513 Volleyball",23],
-  ["2025-12-01",164392,"Madtown Volleyball",23],
-  ["2025-12-01",191031,"Iowa Impact Volleyball Club",20],
-  ["2025-12-01",140376,"Platform Elite Volleyball",17],
-  ["2025-12-01",138078,"DaKine Volleyball Club",16],
-  ["2025-12-01",191233,"Maverick Volleyball Club",15],
-  ["2025-12-01",192580,"1 Flight Volleyball Club",15],
-  ["2025-12-01",186069,"Northern Nevada Juniors Volleyball Club",13],
-  ["2025-12-01",158700,"Club 801 Volleyball",11],
-  ["2025-12-01",140645,"Atlanta Extreme Volleyball Club",11],
-  ["2025-12-01",185710,"Reign Volleyball",4],
-  ["2025-12-01",173418,"DG Warriors",4],
-  ["2025-12-01",116865,"FC Elite",4],
-  ["2025-12-01",140761,"Elite Volleyball Training Center",2],
-  ["2025-12-01",191038,"Iowa United Volleyball",2],
-  ["2025-12-01",184990,"M1 Volleyball",2],
-  ["2025-12-01",191104,"Georgia Beach Volleyball",1],
-  ["2025-12-01",142105,"Evansville United",1],
-  ["2025-11-01",99864,"Rockstar Volleyball",260],
-  ["2025-11-01",139501,"Tstreet Volleyball Club",93],
-  ["2025-11-01",94102,"A5 Volleyball Club",88],
-  ["2025-11-01",55517,"Houston Skyline Jr's",74],
-  ["2025-11-01",90231,"Aspire Volleyball",67],
-  ["2025-11-01",35479,"Spike & Serve Volleyball Club",65],
-  ["2025-11-01",109361,"Red Rock Volleyball",65],
-  ["2025-11-01",76107,"JJVA Jacksonville Juniors Volleyball Association",64],
-  ["2025-11-01",73108,"Premier Nebraska Volleyball",63],
-  ["2025-11-01",114603,"Athena VBC",61],
-  ["2025-11-01",171158,"Union Volleyball",59],
-  ["2025-11-01",63032,"Austin Junior Volleyball",48],
-  ["2025-11-01",190920,"Salt City Boys (LOVB)",47],
-  ["2025-11-01",113057,"Meraki Volleyball",44],
-  ["2025-11-01",140985,"Colorado Volleyball Association",32],
-  ["2025-11-01",134570,"Albuquerque Rebels Volleyball Club",28],
-  ["2025-11-01",111593,"SMASH Volleyball Club",27],
-  ["2025-11-01",191036,"513 Volleyball",23],
-  ["2025-11-01",95481,"Boomers Volleyball Academy",23],
-  ["2025-11-01",158985,"RockCity Volleyball",22],
-  ["2025-11-01",173983,"Kokoro Volleyball",21],
-  ["2025-11-01",191031,"Iowa Impact Volleyball Club",20],
-  ["2025-11-01",165386,"Game Point Volleyball",14],
-  ["2025-11-01",139175,"Roots Volleyball",11],
-  ["2025-11-01",165908,"East Coast Volleyball Club",10],
-  ["2025-11-01",158700,"Club 801 Volleyball",8],
-  ["2025-11-01",116594,"One Wisconsin VBC",6],
-  ["2025-11-01",140761,"Elite Volleyball Training Center",5],
-  ["2025-11-01",138078,"DaKine Volleyball Club",4],
-  ["2025-11-01",191233,"Maverick Volleyball Club",4],
-  ["2025-11-01",59350,"KC Power",4],
-  ["2025-11-01",165821,"Seal Beach Volleyball Club",2],
-  ["2025-11-01",140645,"Atlanta Extreme Volleyball Club",2],
-  ["2025-11-01",99313,"Colorado Juniors",2],
-  ["2025-11-01",164392,"Madtown Volleyball",1],
-  ["2025-11-01",173418,"DG Warriors",1],
-  ["2025-11-01",191104,"Georgia Beach Volleyball",1],
-  ["2025-11-01",142105,"Evansville United",1],
-  ["2025-11-01",116865,"FC Elite",1],
-  ["2025-11-01",191038,"Iowa United Volleyball",1],
-  ["2025-11-01",141441,"Lexington United Volleyball",1],
-  ["2025-11-01",184990,"M1 Volleyball",1],
-  ["2025-11-01",185710,"Reign Volleyball",1],
-  ["2025-10-01",99864,"Rockstar Volleyball",180],
-  ["2025-10-01",90231,"Aspire Volleyball",82],
-  ["2025-10-01",190920,"Salt City Boys (LOVB)",55],
-  ["2025-10-01",94102,"A5 Volleyball Club",52],
-  ["2025-10-01",114603,"Athena VBC",52],
-  ["2025-10-01",109361,"Red Rock Volleyball",44],
-  ["2025-10-01",134570,"Albuquerque Rebels Volleyball Club",35],
-  ["2025-10-01",76107,"JJVA Jacksonville Juniors Volleyball Association",35],
-  ["2025-10-01",171158,"Union Volleyball",26],
-  ["2025-10-01",113057,"Meraki Volleyball",24],
-  ["2025-10-01",158985,"RockCity Volleyball",22],
-  ["2025-10-01",173983,"Kokoro Volleyball",21],
-  ["2025-10-01",73108,"Premier Nebraska Volleyball",17],
-  ["2025-10-01",55517,"Houston Skyline Jr's",15],
-  ["2025-10-01",139501,"Tstreet Volleyball Club",13],
-  ["2025-10-01",63032,"Austin Junior Volleyball",11],
-  ["2025-10-01",111593,"SMASH Volleyball Club",9],
-  ["2025-10-01",165908,"East Coast Volleyball Club",8],
-  ["2025-10-01",116594,"One Wisconsin VBC",4],
-  ["2025-10-01",191036,"513 Volleyball",4],
-  ["2025-10-01",138078,"DaKine Volleyball Club",3],
-  ["2025-10-01",158892,"Gainesville Juniors",3],
-  ["2025-10-01",59350,"KC Power",2],
-  ["2025-10-01",165821,"Seal Beach Volleyball Club",1],
-  ["2025-10-01",35479,"Spike & Serve Volleyball Club",1],
-  ["2025-10-01",99313,"Colorado Juniors",1],
-  ["2025-10-01",140985,"Colorado Volleyball Association",1],
-  ["2025-10-01",173418,"DG Warriors",1],
-  ["2025-10-01",185710,"Reign Volleyball",1],
-  ["2025-09-01",90231,"Aspire Volleyball",53],
-  ["2025-09-01",109361,"Red Rock Volleyball",44],
-  ["2025-09-01",99864,"Rockstar Volleyball",21],
-  ["2025-09-01",134570,"Albuquerque Rebels Volleyball Club",21],
-  ["2025-09-01",55517,"Houston Skyline Jr's",18],
-  ["2025-09-01",190920,"Salt City Boys (LOVB)",16],
-  ["2025-09-01",113057,"Meraki Volleyball",15],
-  ["2025-09-01",73108,"Premier Nebraska Volleyball",12],
-  ["2025-09-01",94102,"A5 Volleyball Club",8],
-  ["2025-09-01",165908,"East Coast Volleyball Club",7],
-  ["2025-09-01",171158,"Union Volleyball",4],
-  ["2025-09-01",138078,"DaKine Volleyball Club",3],
-  ["2025-09-01",114603,"Athena VBC",3],
-  ["2025-09-01",139501,"Tstreet Volleyball Club",2],
-  ["2025-09-01",141441,"Lexington United Volleyball",2],
-  ["2025-09-01",140985,"Colorado Volleyball Association",2],
-  ["2025-09-01",165386,"Game Point Volleyball",1],
-  ["2025-09-01",111593,"SMASH Volleyball Club",1],
-  ["2025-09-01",76107,"JJVA Jacksonville Juniors Volleyball Association",1],
-  ["2025-09-01",173983,"Kokoro Volleyball",1],
-  ["2025-09-01",165821,"Seal Beach Volleyball Club",1],
-  ["2025-09-01",99313,"Colorado Juniors",1],
-  ["2025-08-01",73108,"Premier Nebraska Volleyball",13],
-  ["2025-08-01",55517,"Houston Skyline Jr's",13],
-  ["2025-08-01",94102,"A5 Volleyball Club",6],
-  ["2025-08-01",165908,"East Coast Volleyball Club",3],
-  ["2025-08-01",141441,"Lexington United Volleyball",2],
-  ["2025-08-01",99864,"Rockstar Volleyball",2],
-  ["2025-08-01",114603,"Athena VBC",2],
-  ["2025-08-01",171158,"Union Volleyball",2],
-  ["2025-08-01",134570,"Albuquerque Rebels Volleyball Club",2],
-  ["2025-08-01",138078,"DaKine Volleyball Club",1],
-  ["2025-08-01",140985,"Colorado Volleyball Association",1],
-  ["2025-08-01",109361,"Red Rock Volleyball",1],
-  ["2025-08-01",139175,"Roots Volleyball",1],
-  ["2025-08-01",173983,"Kokoro Volleyball",1],
-  ["2025-07-01",73108,"Premier Nebraska Volleyball",11],
-  ["2025-07-01",55517,"Houston Skyline Jr's",2],
-  ["2025-07-01",114603,"Athena VBC",2],
-  ["2025-07-01",141441,"Lexington United Volleyball",2],
-  ["2025-07-01",186069,"Northern Nevada Juniors Volleyball Club",1],
-  ["2025-07-01",165908,"East Coast Volleyball Club",1],
-  ["2025-07-01",109361,"Red Rock Volleyball",1],
-  ["2025-07-01",99864,"Rockstar Volleyball",1],
-];
-
-// ============================================================
-// SETUP
-// ============================================================
-
-// Get latest MAU per club
-const latestMAUByClub = {};
-mauRaw.forEach(([date,id,name,mau]) => {
-  if (!latestMAUByClub[name] || date > latestMAUByClub[name].date) {
-    latestMAUByClub[name] = { mau, date };
-  }
-});
-
-// Enrich videosByClub with MAU
-const tableData = videosByClub.map(c => ({
-  ...c,
-  mau: latestMAUByClub[c.name]?.mau || 0
-}));
-
-// Hero stats
-document.getElementById('activeClubs').textContent = videosByClub.length;
-const feb2026Total = mauRaw.filter(r => r[0] === '2026-02-01').reduce((s,r) => s+r[3], 0);
-document.getElementById('latestMAU').textContent = feb2026Total.toLocaleString();
-document.getElementById('reportDate').textContent = 'Data as of Feb 2026';
-
-const maxTotal = Math.max(...videosByClub.map(c => c.total));
-
-// ============================================================
-// CHART 1 — Top 15 clubs by videos
-// ============================================================
-const top15 = [...videosByClub].sort((a,b) => b.total - a.total).slice(0,15);
-const chartColors = [
-  '#e8ff47','#d4eb3f','#c0d738','#adc331','#99af2a',
-  '#4fc3f7','#45b0e0','#3b9dc9','#318ab2','#27779b',
-  '#ff6b6b','#e86060','#d15555','#ba4a4a','#a33f3f'
-];
-
-new Chart(document.getElementById('topClubsChart'), {
-  type: 'bar',
-  data: {
-    labels: top15.map(c => c.name.length > 22 ? c.name.slice(0,20)+'…' : c.name),
-    datasets: [{
-      data: top15.map(c => c.total),
-      backgroundColor: chartColors,
-      borderRadius: 4,
-      borderSkipped: false,
-    }]
-  },
-  options: {
-    indexAxis: 'y',
-    responsive: true,
-    plugins: { legend: { display: false }, tooltip: {
-      callbacks: { title: (i) => top15[i[0].dataIndex].name }
-    }},
-    scales: {
-      x: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
-      y: { grid: { display: false }, ticks: { color: '#e8eaf0', font: { size: 11 } } }
-    }
-  }
-});
-
-// ============================================================
-// CHART 2 — Games vs Practices stacked
-// ============================================================
-const top15type = [...videosByClub].sort((a,b) => b.total - a.total).slice(0,15);
-
-new Chart(document.getElementById('videoTypeChart'), {
-  type: 'bar',
-  data: {
-    labels: top15type.map(c => c.name.length > 22 ? c.name.slice(0,20)+'…' : c.name),
-    datasets: [
-      { label: 'Games', data: top15type.map(c => c.games), backgroundColor: '#4fc3f7', borderRadius: 0 },
-      { label: 'Practices', data: top15type.map(c => c.practices), backgroundColor: '#e8ff47', borderRadius: 4 },
-    ]
-  },
-  options: {
-    indexAxis: 'y',
-    responsive: true,
-    plugins: {
-      legend: { labels: { color: '#6b7394', font: { size: 11 }, boxWidth: 10 } },
-      tooltip: { callbacks: { title: (i) => top15type[i[0].dataIndex].name } }
-    },
-    scales: {
-      x: { stacked: true, grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
-      y: { stacked: true, grid: { display: false }, ticks: { color: '#e8eaf0', font: { size: 11 } } }
-    }
-  }
-});
-
-// ============================================================
-// CHART 3 — MAU over time (multi-select compare)
-// ============================================================
-const months = [...new Set(mauRaw.map(r => r[0]))].sort();
-const monthLabels = months.map(m => {
-  const d = new Date(m); return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
-});
-
-const totalByMonth = months.map(m => mauRaw.filter(r=>r[0]===m).reduce((s,r)=>s+r[3],0));
-
-// All unique club names from MAU data, sorted alphabetically
-const allMAUClubs = [...new Set(mauRaw.map(r => r[2]))].sort();
-
-const lineColors = [
-  '#e8ff47','#4fc3f7','#ff6b6b','#c084fc','#fb923c',
-  '#34d399','#f472b6','#60a5fa','#fbbf24','#a78bfa',
-  '#f87171','#38bdf8','#4ade80','#e879f9','#facc15'
-];
-
-let mauMode = 'all'; // 'all' | 'select'
-let selectedClubs = []; // array of club names
-let mauChart;
-
-function clubColor(club) {
-  const idx = selectedClubs.indexOf(club);
-  return lineColors[idx % lineColors.length];
+async function fetchCSV(tab) {
+  const res = await fetch(sheetUrl(tab));
+  if (!res.ok) throw new Error(`Could not load "${tab}" (HTTP ${res.status})`);
+  return parseCSV(await res.text());
 }
 
-function buildMAUChart() {
-  if (mauChart) mauChart.destroy();
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+  return lines.slice(1).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').replace(/^"|"$/g, '').trim(); });
+    return obj;
+  });
+}
 
-  let datasets;
-  if (mauMode === 'all' || selectedClubs.length === 0) {
-    datasets = [{
-      label: 'All Clubs (Total)',
-      data: totalByMonth,
-      borderColor: '#e8ff47',
-      backgroundColor: 'rgba(232,255,71,0.07)',
-      fill: true,
-      tension: 0.3,
-      pointRadius: 4,
-      pointBackgroundColor: '#e8ff47',
-      borderWidth: 2,
-    }];
-  } else {
-    datasets = selectedClubs.map((club, i) => {
-      const col = lineColors[i % lineColors.length];
-      return {
-        label: club,
-        data: months.map(m => {
-          const row = mauRaw.find(r => r[0]===m && r[2]===club);
-          return row ? row[3] : null;
-        }),
-        borderColor: col,
-        backgroundColor: col + '12',
-        fill: false,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: col,
-        borderWidth: 2,
-        spanGaps: false,
-      };
+async function loadData() {
+  try {
+    const [mauRows, videoRows, typeRows, engRows] = await Promise.all([
+      fetchCSV('MAU'), fetchCSV('Videos'), fetchCSV('Types'), fetchCSV('Engagement')
+    ]);
+
+    // --- MAU (team level) ---
+    // cols: activity_month, hudl_organization_id, organization_name, team_id, team_name, monthly_active_users
+    const mauData = mauRows.filter(r => r.organization_name && r.hudl_organization_id).map(r => ({
+      month: parseMonth(r.activity_month),
+      orgId: r.hudl_organization_id,
+      orgName: r.organization_name,
+      teamId: r.team_id,
+      teamName: r.team_name,
+      mau: Number(r.monthly_active_users) || 0,
+    }));
+
+    // --- Videos (team level) ---
+    // cols: organization_name, hudl_organization_id, team_name, team_id, total_unique_uploads
+    const videoTeamRows = videoRows.filter(r => r.hudl_organization_id && r.team_id);
+    const grandTotalRow = videoRows.find(r => !r.hudl_organization_id);
+    const grandTotal = grandTotalRow ? Number(grandTotalRow.total_unique_uploads) : videoTeamRows.reduce((s,r) => s + Number(r.total_unique_uploads||0), 0);
+
+    // --- Types (team level) ---
+    // cols: organization_name, hudl_organization_id, team_name, team_id, practice_uploads, game_match_uploads, total_unique_uploads
+    const typeMap = {}; // teamId -> {games, practices}
+    typeRows.forEach(r => { if (r.team_id) typeMap[r.team_id] = { games: Number(r.game_match_uploads||0), practices: Number(r.practice_uploads||0) }; });
+
+    // --- Engagement (team level) ---
+    // cols: org_id, org_name, org_classification, team_id, team_name, playlists created, highlights created by users, recruitable athletes
+    const engMap = {}; // teamId -> {playlists, highlights, recruitable}
+    engRows.forEach(r => {
+      if (r.team_id) {
+        // Try multiple possible column name formats from Google Sheets
+        const playlists = Number(r['playlists created'] || r['SUM of playlists created'] || r['Playlists Created'] || 0);
+        const highlights = Number(r['highlights created by users'] || r['SUM of highlights created by users'] || r['Highlights Created by Users'] || r['highlights created'] || 0);
+        const recruitable = Number(r['recruitable athletes'] || r['SUM of recruitable athletes'] || r['Recruitable Athletes'] || 0);
+        engMap[r.team_id] = { playlists, highlights, recruitable };
+      }
     });
-  }
 
-  mauChart = new Chart(document.getElementById('mauChart'), {
-    type: 'line',
-    data: { labels: monthLabels, datasets },
-    options: {
-      responsive: true,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: selectedClubs.length > 1,
-          labels: { color: '#6b7394', font: { size: 11 }, boxWidth: 10, padding: 14 }
-        }
-      },
-      scales: {
-        x: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } },
-        y: { grid: { color: '#1e2740' }, ticks: { color: '#6b7394', font: { size: 11 } } }
+    // Build org lookup from engagement data (includes clubs with no video uploads)
+    const orgLookup = {}; // orgId -> orgName
+    engRows.forEach(r => { if (r.org_id && r.org_name) orgLookup[r.org_id] = r.org_name; });
+
+    document.getElementById('loadingOverlay').style.display = 'none';
+    init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, engRows);
+
+  } catch(err) {
+    console.error(err);
+    const el = document.getElementById('loadingError');
+    el.style.display = 'block';
+    el.innerHTML = `Failed to load data from Google Sheets.<br>Make sure the sheet is shared publicly and all 4 tabs exist.<br><small style="opacity:0.5">${err.message}</small>`;
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, engRows) {
+
+  const COLORS = ['#ff6300','#0a93f5','#34d399','#f59e0b','#c084fc','#f43f5e','#22d3ee','#fb923c','#a3e635','#e879f9','#60a5fa','#4ade80','#fbbf24','#f87171','#38bdf8'];
+
+  // ============================================================
+  // BUILD TEAM-LEVEL DATA
+  // ============================================================
+  // All unique teams from video data
+  const teamData = videoTeamRows.map(r => {
+    const tid = r.team_id;
+    const tp = typeMap[tid] || { games: 0, practices: 0 };
+    const eng = engMap[tid] || { playlists: 0, highlights: 0, recruitable: 0 };
+    // Latest MAU for this team
+    const teamMauRows = mauData.filter(m => m.teamId === tid);
+    const latestTeamMonth = teamMauRows.length ? [...new Set(teamMauRows.map(m => m.month))].sort().at(-1) : null;
+    const latestTeamMau = latestTeamMonth ? (teamMauRows.find(m => m.month === latestTeamMonth)?.mau || 0) : 0;
+    return {
+      orgId: r.hudl_organization_id,
+      orgName: r.organization_name,
+      teamId: tid,
+      teamName: r.team_name,
+      total: Number(r.total_unique_uploads) || 0,
+      games: tp.games,
+      practices: tp.practices,
+      mau: latestTeamMau,
+      playlists: eng.playlists,
+      highlights: eng.highlights,
+      recruitable: eng.recruitable,
+    };
+  });
+
+  // ============================================================
+  // BUILD ORG-LEVEL ROLLUP
+  // ============================================================
+  const orgMap = {};
+
+  // Seed orgs from engagement data first so clubs with no videos still appear
+  Object.entries(orgLookup).forEach(([orgId, orgName]) => {
+    if (!orgMap[orgId]) {
+      orgMap[orgId] = { orgId, name: orgName, teams: [], total: 0, games: 0, practices: 0, mau: 0, playlists: 0, highlights: 0, recruitable: 0 };
+    }
+  });
+
+  teamData.forEach(t => {
+    if (!orgMap[t.orgId]) {
+      orgMap[t.orgId] = { orgId: t.orgId, name: t.orgName, teams: [], total: 0, games: 0, practices: 0, mau: 0, playlists: 0, highlights: 0, recruitable: 0 };
+    }
+    const o = orgMap[t.orgId];
+    o.teams.push(t);
+    o.total += t.total;
+    o.games += t.games;
+    o.practices += t.practices;
+    o.playlists += t.playlists;
+    o.highlights += t.highlights;
+    o.recruitable += t.recruitable;
+  });
+
+  // Add org-level MAU (from latest month across all teams in org)
+  const months = [...new Set(mauData.map(r => r.month))].sort();
+  // Include Feb 2026 — if present in data it will be the latest month
+  const latestMonth = months.at(-1);
+  const latestLabel = latestMonth ? (() => { const p = latestMonth.split('-'); return new Date(p[0], parseInt(p[1])-1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); })() : '';
+
+  // Org MAU = sum of latest month MAU across teams
+  mauData.filter(r => r.month === latestMonth).forEach(r => {
+    if (orgMap[r.orgId]) orgMap[r.orgId].mau += r.mau;
+  });
+
+  // For orgs seeded from engagement but with no video teams,
+  // roll up their engagement metrics directly from engRows
+  engRows.forEach(r => {
+    const orgId = r.org_id;
+    if (orgId && orgMap[orgId]) {
+      const playlists = Number(r['playlists created'] || 0);
+      const highlights = Number(r['highlights created by users'] || 0);
+      const recruitable = Number(r['recruitable athletes'] || 0);
+      // Only add if this team isn't already in teamData (avoid double-counting)
+      const alreadyCounted = teamData.some(t => t.orgId === orgId && t.teamId === r.team_id);
+      if (!alreadyCounted) {
+        orgMap[orgId].playlists += playlists;
+        orgMap[orgId].highlights += highlights;
+        orgMap[orgId].recruitable += recruitable;
       }
     }
   });
-}
 
-function setMode(mode) {
-  mauMode = mode;
-  document.getElementById('modeAllBtn').classList.toggle('active', mode === 'all');
-  document.getElementById('modeSelectBtn').classList.toggle('active', mode === 'select');
-  document.getElementById('searchWrap').style.display = mode === 'select' ? 'block' : 'none';
-  document.getElementById('clearAllBtn').style.display = mode === 'select' && selectedClubs.length > 0 ? 'flex' : 'none';
-  if (mode === 'all') {
-    document.getElementById('mauSubtitle').textContent = 'Showing total MAU across all clubs';
-  } else {
-    document.getElementById('mauSubtitle').textContent = selectedClubs.length === 0
-      ? 'Search for clubs to zoom in or compare side-by-side'
-      : `Comparing ${selectedClubs.length} club${selectedClubs.length > 1 ? 's' : ''}`;
+  const clubsRaw = Object.values(orgMap).sort((a, b) => b.total - a.total);
+
+  // ============================================================
+  // ENGAGEMENT SCORE CALCULATION
+  // 40% video adoption (% teams with video)
+  // 35% MAU per team
+  // 25% highlights per team
+  // ============================================================
+  function percentileRank(val, allVals) {
+    const sorted = [...allVals].sort((a, b) => a - b);
+    const below = sorted.filter(v => v < val).length;
+    return Math.round((below / sorted.length) * 100);
   }
-  buildMAUChart();
-}
 
-function toggleClub(club) {
-  const idx = selectedClubs.indexOf(club);
-  if (idx === -1) {
-    if (selectedClubs.length >= 15) return; // cap at 15
-    selectedClubs.push(club);
-  } else {
-    selectedClubs.splice(idx, 1);
-  }
-  renderSelectedTags();
-  renderDropdown(document.getElementById('clubSearchInput').value);
-  document.getElementById('clearAllBtn').style.display = selectedClubs.length > 0 ? 'flex' : 'none';
-  document.getElementById('mauSubtitle').textContent = selectedClubs.length === 0
-    ? 'Search for clubs to zoom in or compare side-by-side'
-    : `Comparing ${selectedClubs.length} club${selectedClubs.length > 1 ? 's' : ''}`;
-  buildMAUChart();
-}
+  const videoAdoptionVals = clubsRaw.map(c => c.teams.length > 0 ? (c.teams.filter(t => t.total > 0).length / c.teams.length) * 100 : 0);
+  const mauPerTeamVals = clubsRaw.map(c => c.teams.length > 0 ? c.mau / c.teams.length : 0);
+  const highlightsPerTeamVals = clubsRaw.map(c => c.teams.length > 0 ? c.highlights / c.teams.length : 0);
 
-function clearAllClubs() {
-  selectedClubs = [];
-  renderSelectedTags();
-  renderDropdown('');
-  document.getElementById('clearAllBtn').style.display = 'none';
-  document.getElementById('mauSubtitle').textContent = 'Search for clubs to zoom in or compare side-by-side';
-  buildMAUChart();
-}
+  const clubs = clubsRaw.map((c, i) => {
+    const videoAdoptionPct = videoAdoptionVals[i];
+    const mauPerTeam = mauPerTeamVals[i];
+    const highlightsPerTeam = highlightsPerTeamVals[i];
 
-function renderSelectedTags() {
-  const container = document.getElementById('selectedClubs');
-  container.innerHTML = '';
-  selectedClubs.forEach((club, i) => {
-    const col = lineColors[i % lineColors.length];
-    const tag = document.createElement('div');
-    tag.className = 'club-tag';
-    tag.style.background = col + '22';
-    tag.style.borderColor = col + '66';
-    tag.style.color = col;
-    tag.innerHTML = `<div class="tag-dot" style="background:${col}"></div>${club.length > 28 ? club.slice(0,26)+'…' : club}<span class="tag-x" onclick="toggleClub('${club.replace(/'/g,"\\'")}')">×</span>`;
-    container.appendChild(tag);
-  });
-}
+    const vPct = percentileRank(videoAdoptionPct, videoAdoptionVals);
+    const mPct = percentileRank(mauPerTeam, mauPerTeamVals);
+    const hPct = percentileRank(highlightsPerTeam, highlightsPerTeamVals);
 
-// Dropdown logic
-function renderDropdown(query) {
-  const dropdown = document.getElementById('clubDropdown');
-  const q = query.toLowerCase();
-  const filtered = allMAUClubs.filter(c => c.toLowerCase().includes(q));
-  dropdown.innerHTML = '';
-  if (filtered.length === 0) {
-    dropdown.innerHTML = '<div class="club-dropdown-item" style="color:#6b7394;cursor:default">No clubs found</div>';
-    return;
-  }
-  filtered.forEach(club => {
-    const isSelected = selectedClubs.includes(club);
-    const idx = selectedClubs.indexOf(club);
-    const col = isSelected ? lineColors[idx % lineColors.length] : '#6b7394';
-    const item = document.createElement('div');
-    item.className = 'club-dropdown-item' + (isSelected ? ' selected' : '');
-    item.innerHTML = `<div class="check" style="${isSelected ? `background:${col};border-color:${col}` : ''}">${isSelected ? '✓' : ''}</div><div class="dot" style="background:${col}"></div>${club}`;
-    item.onclick = (e) => { e.stopPropagation(); toggleClub(club); };
-    dropdown.appendChild(item);
-  });
-}
+    const score = Math.round(vPct * 0.40 + mPct * 0.35 + hPct * 0.25);
 
-function filterDropdown() {
-  renderDropdown(document.getElementById('clubSearchInput').value);
-  openDropdown();
-}
-
-function openDropdown() {
-  renderDropdown(document.getElementById('clubSearchInput').value);
-  document.getElementById('clubDropdown').classList.add('open');
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.club-search-wrap')) {
-    document.getElementById('clubDropdown').classList.remove('open');
-  }
-});
-
-buildMAUChart();
-
-// ============================================================
-// TABLE
-// ============================================================
-let filteredData = [...tableData];
-let sortKey = 'total';
-let sortDir = -1;
-let currentPage = 0;
-const PAGE_SIZE = 15;
-
-function sortTable(key) {
-  if (sortKey === key) { sortDir *= -1; }
-  else { sortKey = key; sortDir = -1; }
-  renderTable();
-}
-
-function filterTable() {
-  const q = document.getElementById('tableSearch').value.toLowerCase();
-  filteredData = tableData.filter(r => r.name.toLowerCase().includes(q));
-  currentPage = 0;
-  renderTable();
-}
-
-function changePage(dir) {
-  const maxPage = Math.ceil(filteredData.length / PAGE_SIZE) - 1;
-  currentPage = Math.max(0, Math.min(maxPage, currentPage + dir));
-  renderTable();
-}
-
-function renderTable() {
-  const keyMap = { name:'name', total:'total', games:'games', practices:'practices', mau:'mau' };
-  const k = keyMap[sortKey] || 'total';
-
-  const sorted = [...filteredData].sort((a,b) => {
-    if (k === 'name') return sortDir * a.name.localeCompare(b.name);
-    return sortDir * (b[k] - a[k]);
+    return {
+      ...c,
+      teamCount: c.teams.length,
+      score,
+      scoreComponents: {
+        videoAdoption: { raw: Math.round(videoAdoptionPct), pct: vPct, weight: 40 },
+        mauPerTeam: { raw: Math.round(mauPerTeam * 10) / 10, pct: mPct, weight: 35 },
+        highlightsPerTeam: { raw: Math.round(highlightsPerTeam * 10) / 10, pct: hPct, weight: 25 },
+      }
+    };
   });
 
-  const start = currentPage * PAGE_SIZE;
-  const page = sorted.slice(start, start + PAGE_SIZE);
+  // Rank lookups
+  const rankByVideos = {};
+  [...clubs].sort((a, b) => b.total - a.total).forEach((c, i) => { rankByVideos[c.orgId] = i + 1; });
 
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
+  // Latest MAU per club lookup (for org-level MAU history)
+  const orgMauHistory = {}; // orgId -> { month -> mau }
+  mauData.forEach(r => {
+    if (!orgMauHistory[r.orgId]) orgMauHistory[r.orgId] = {};
+    orgMauHistory[r.orgId][r.month] = (orgMauHistory[r.orgId][r.month] || 0) + r.mau;
+  });
 
-  page.forEach(row => {
-    const pct = Math.round((row.total / maxTotal) * 100);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="club-name">${row.name}</td>
-      <td class="number">
-        <div class="bar-cell">
-          <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
-          ${row.total.toLocaleString()}
+  // Table data sorted by total videos desc
+  const tableData = [...clubs].sort((a, b) => b.total - a.total);
+  const maxTotal = Math.max(...clubs.map(c => c.total));
+
+  // ============================================================
+  // HEADER STATS
+  // ============================================================
+  const totalMAU = clubs.reduce((s, c) => s + c.mau, 0);
+  const totalHighlights = clubs.reduce((s, c) => s + c.highlights, 0);
+  const totalRecruits = clubs.reduce((s, c) => s + c.recruitable, 0);
+
+  document.getElementById('statVideos').textContent = grandTotal.toLocaleString();
+  document.getElementById('statClubs').textContent = clubs.length;
+  document.getElementById('statMAU').textContent = totalMAU.toLocaleString();
+  document.getElementById('statMAUSub').textContent = latestLabel || 'Most recent month';
+  document.getElementById('statHighlights').textContent = totalHighlights.toLocaleString();
+  document.getElementById('statRecruits').textContent = totalRecruits.toLocaleString();
+  document.getElementById('datePill').textContent = latestLabel ? `As of ${latestLabel}` : 'Live';
+
+  // ============================================================
+  // CHART 1 — Top 15 stacked bar
+  // ============================================================
+  const top15 = [...clubs].sort((a, b) => b.total - a.total).slice(0, 15);
+  new Chart(document.getElementById('topClubsChart'), {
+    type: 'bar',
+    data: {
+      labels: top15.map(c => c.name.length > 26 ? c.name.slice(0,24)+'…' : c.name),
+      datasets: [
+        { label: 'Games', data: top15.map(c => c.games), backgroundColor: '#0a93f5', borderRadius: 0, borderSkipped: false },
+        { label: 'Practices', data: top15.map(c => c.practices), backgroundColor: '#ff6300', borderRadius: 3, borderSkipped: false },
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true,
+      onClick: (e, els) => { if (els[0]) openPanel(top15[els[0].index]); },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => top15[i[0].dataIndex].name } } },
+      scales: {
+        x: { stacked: true, grid: { color: '#2a3542' }, ticks: { color: '#6b7d8f', font: { size: 11, family: 'Barlow' } } },
+        y: { stacked: true, grid: { display: false }, ticks: { color: '#f0f4f8', font: { size: 11, family: 'Barlow' } } }
+      }
+    }
+  });
+
+  // ============================================================
+  // LEADERBOARD
+  // ============================================================
+  const last3Months = months.slice(-3);
+  let lbMode = 'mau';
+
+  function buildSparkline(orgId) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 60; canvas.height = 24;
+    const vals = last3Months.map(m => orgMauHistory[orgId]?.[m] || 0);
+    new Chart(canvas, {
+      type: 'line',
+      data: { labels: last3Months, datasets: [{ data: vals, borderColor: '#ff6300', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3 }] },
+      options: { responsive: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+    return canvas;
+  }
+
+  function trendArrow(orgId) {
+    const vals = last3Months.map(m => orgMauHistory[orgId]?.[m] || 0);
+    const first = vals[0], last = vals[vals.length - 1];
+    if (!first) return { cls: 'flat', txt: '—' };
+    const pct = Math.round(((last - first) / first) * 100);
+    if (pct > 0) return { cls: 'up', txt: `+${pct}%` };
+    if (pct < 0) return { cls: 'down', txt: `${pct}%` };
+    return { cls: 'flat', txt: '0%' };
+  }
+
+  function buildLeaderboard(mode) {
+    const list = document.getElementById('leaderboardList');
+    list.innerHTML = '';
+    let ranked;
+    if (mode === 'mau') {
+      ranked = [...clubs].sort((a, b) => b.mau - a.mau).slice(0, 15);
+      document.getElementById('leaderboardSub').textContent = 'Ranked by latest monthly active users';
+    } else if (mode === 'videos') {
+      ranked = [...clubs].sort((a, b) => b.total - a.total).slice(0, 15);
+      document.getElementById('leaderboardSub').textContent = 'Ranked by total videos uploaded';
+    } else {
+      ranked = [...clubs].sort((a, b) => b.total - a.total).slice(0, 15);
+      document.getElementById('leaderboardSub').textContent = 'Ranked by total videos uploaded';
+    }
+
+    ranked.forEach((club, i) => {
+      const row = document.createElement('div');
+      row.className = 'lb-row';
+      row.onclick = () => openPanel(club);
+      const rankCls = i === 0 ? 'lb-rank gold' : i === 1 ? 'lb-rank silver' : i === 2 ? 'lb-rank bronze' : 'lb-rank';
+      const val = mode === 'mau' ? (club.mau||0).toLocaleString() : mode === 'videos' ? club.total.toLocaleString() : club.score;
+      const shortName = club.name.length > 24 ? club.name.slice(0,22)+'…' : club.name;
+      row.innerHTML = `<div class="${rankCls}">${i+1}</div><div class="lb-name" title="${club.name}">${shortName}</div>`;
+      if (mode === 'mau') {
+        row.appendChild(buildSparkline(club.orgId));
+        const t = trendArrow(club.orgId);
+        const tEl = document.createElement('div');
+        tEl.className = `lb-trend ${t.cls}`;
+        tEl.textContent = t.txt;
+        row.appendChild(tEl);
+      }
+      const valEl = document.createElement('div');
+      valEl.className = 'lb-value';
+      valEl.textContent = val;
+      row.appendChild(valEl);
+      list.appendChild(row);
+    });
+  }
+
+  window.setLeaderboard = function(mode) {
+    lbMode = mode;
+    ['lbModeMAU','lbModeVideos'].forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById(mode === 'mau' ? 'lbModeMAU' : 'lbModeVideos').classList.add('active');
+    buildLeaderboard(mode);
+  };
+
+  buildLeaderboard('mau');
+
+  // ============================================================
+  // MAU CHART
+  // ============================================================
+  const monthLabels = months.map(m => { const p = m.split('-'); return new Date(p[0], parseInt(p[1])-1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }); });
+  const totalByMonth = months.map(m => mauData.filter(r => r.month === m).reduce((s, r) => s + r.mau, 0));
+  const allOrgNames = clubs.map(c => c.name).sort();
+  let mauMode = 'all', selectedClubs = [], mauChartInst;
+
+  function buildMauChart() {
+    if (mauChartInst) mauChartInst.destroy();
+    const datasets = (mauMode === 'all' || !selectedClubs.length)
+      ? [{ label: 'All Clubs', data: totalByMonth, borderColor: '#ff6300', backgroundColor: 'rgba(255,99,0,0.07)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#ff6300', borderWidth: 2 }]
+      : selectedClubs.map((name, i) => {
+          const club = clubs.find(c => c.name === name);
+          const col = COLORS[i % COLORS.length];
+          return { label: name, data: months.map(m => orgMauHistory[club?.orgId]?.[m] || null), borderColor: col, backgroundColor: col+'10', fill: false, tension: 0.35, pointRadius: 3, pointBackgroundColor: col, borderWidth: 2, spanGaps: false };
+        });
+    mauChartInst = new Chart(document.getElementById('mauChart'), {
+      type: 'line',
+      data: { labels: monthLabels, datasets },
+      options: {
+        responsive: true, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: selectedClubs.length > 1, labels: { color: '#6b7d8f', font: { size: 11, family: 'Barlow' }, boxWidth: 10, padding: 12 } } },
+        scales: {
+          x: { grid: { color: '#2a3542' }, ticks: { color: '#6b7d8f', font: { size: 11, family: 'Barlow' } } },
+          y: { grid: { color: '#2a3542' }, ticks: { color: '#6b7d8f', font: { size: 11, family: 'Barlow' } } }
+        }
+      }
+    });
+  }
+
+  function updateMauSub() {
+    document.getElementById('mauSub').textContent = mauMode === 'all' ? 'Total MAU across all clubs' : selectedClubs.length === 0 ? 'Search for clubs to compare' : `Comparing ${selectedClubs.length} club${selectedClubs.length > 1 ? 's' : ''}`;
+  }
+
+  window.setMode = function(mode) {
+    mauMode = mode;
+    document.getElementById('modeAll').classList.toggle('active', mode === 'all');
+    document.getElementById('modeCompare').classList.toggle('active', mode === 'compare');
+    document.getElementById('searchWrap').style.display = mode === 'compare' ? 'block' : 'none';
+    document.getElementById('clearBtn').style.display = mode === 'compare' && selectedClubs.length ? 'block' : 'none';
+    updateMauSub(); buildMauChart();
+  };
+
+  function toggleClub(name) {
+    const idx = selectedClubs.indexOf(name);
+    if (idx === -1) { if (selectedClubs.length >= 15) return; selectedClubs.push(name); }
+    else selectedClubs.splice(idx, 1);
+    renderTags(); renderDd(document.getElementById('clubSearch').value);
+    document.getElementById('clearBtn').style.display = selectedClubs.length ? 'block' : 'none';
+    updateMauSub(); buildMauChart();
+  }
+
+  window.clearClubs = function() {
+    selectedClubs = []; renderTags(); renderDd('');
+    document.getElementById('clearBtn').style.display = 'none';
+    updateMauSub(); buildMauChart();
+  };
+
+  function renderTags() {
+    document.getElementById('tagsRow').innerHTML = '';
+    selectedClubs.forEach((name, i) => {
+      const col = COLORS[i % COLORS.length];
+      const tag = document.createElement('div');
+      tag.className = 'club-tag';
+      tag.style.cssText = `background:${col}18;border-color:${col}55;color:${col}`;
+      tag.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${col};display:inline-block"></span>${name.length > 24 ? name.slice(0,22)+'…' : name}<span class="tag-x">×</span>`;
+      tag.querySelector('.tag-x').onclick = () => toggleClub(name);
+      document.getElementById('tagsRow').appendChild(tag);
+    });
+  }
+
+  function renderDd(q) {
+    const dd = document.getElementById('clubDd');
+    const filtered = allOrgNames.filter(n => n.toLowerCase().includes(q.toLowerCase()));
+    dd.innerHTML = '';
+    if (!filtered.length) { dd.innerHTML = '<div class="dd-item" style="color:var(--text-muted);cursor:default">No clubs found</div>'; return; }
+    filtered.forEach(name => {
+      const isSel = selectedClubs.includes(name);
+      const col = isSel ? COLORS[selectedClubs.indexOf(name) % COLORS.length] : '#6b7d8f';
+      const item = document.createElement('div');
+      item.className = 'dd-item' + (isSel ? ' selected' : '');
+      item.innerHTML = `<div class="dd-check" style="${isSel ? `background:${col};border-color:${col}` : ''}">${isSel ? '✓' : ''}</div><div class="dd-dot" style="background:${col}"></div>${name}`;
+      item.onclick = e => { e.stopPropagation(); toggleClub(name); };
+      dd.appendChild(item);
+    });
+  }
+
+  window.filterDd = () => { renderDd(document.getElementById('clubSearch').value); document.getElementById('clubDd').classList.add('open'); };
+  window.openDd = () => { renderDd(document.getElementById('clubSearch').value); document.getElementById('clubDd').classList.add('open'); };
+  document.addEventListener('click', e => { if (!e.target.closest('.club-search-wrap')) document.getElementById('clubDd').classList.remove('open'); });
+  buildMauChart();
+
+  // ============================================================
+  // CLUB TABLE
+  // ============================================================
+  let filteredData = [...tableData], sortKey = 'total', sortDir = -1, currentPage = 0;
+  const PAGE_SIZE = 15;
+
+  function getSortVal(r, key) {
+    if (key === 'rank') return rankByVideos[r.orgId] || 999;
+    if (key === 'name') return r.name;
+    if (key === 'score') return r.score;
+    if (key === 'teams') return r.teamCount;
+    if (key === 'highlights') return r.highlights;
+    if (key === 'recruitable') return r.recruitable;
+    return r[key] || 0;
+  }
+
+  window.sortBy = function(key) {
+    sortDir = sortKey === key ? sortDir * -1 : -1;
+    sortKey = key;
+    renderTable();
+  };
+
+  window.filterTable = function() {
+    const q = document.getElementById('tableSearch').value.toLowerCase();
+    filteredData = tableData.filter(r => r.name.toLowerCase().includes(q));
+    currentPage = 0; renderTable();
+  };
+
+  window.changePg = function(dir) {
+    currentPage = Math.max(0, Math.min(Math.ceil(filteredData.length / PAGE_SIZE) - 1, currentPage + dir));
+    renderTable();
+  };
+
+  function renderTable() {
+    const sorted = [...filteredData].sort((a, b) => {
+      const av = getSortVal(a, sortKey), bv = getSortVal(b, sortKey);
+      return typeof av === 'string' ? sortDir * av.localeCompare(bv) : sortDir * (bv - av);
+    });
+    const start = currentPage * PAGE_SIZE;
+    const page = sorted.slice(start, start + PAGE_SIZE);
+    document.getElementById('tableBody').innerHTML = page.map(row => {
+      const rank = rankByVideos[row.orgId] || '—';
+      const pct = Math.round((row.total / maxTotal) * 100);
+      return `<tr onclick="openPanelByOrg('${row.orgId}')">
+        <td style="color:var(--text);font-weight:600;width:52px;padding:10px;text-align:center;font-size:12px">#${rank}</td>
+        <td class="club-name-cell">${row.name}</td>
+        <td class="num">${row.teamCount}</td>
+        <td class="num"><div class="bar-cell"><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div>${row.total.toLocaleString()}</div></td>
+        <td class="num">${row.mau ? row.mau.toLocaleString() : '—'}</td>
+        <td class="num">${row.highlights.toLocaleString()}</td>
+        <td class="num">${row.recruitable.toLocaleString()}</td>
+        <td><button class="view-row-btn" onclick="event.stopPropagation();openPanelByOrg('${row.orgId}')">View →</button></td>
+      </tr>`;
+    }).join('');
+    const total = filteredData.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    document.getElementById('pgInfo').textContent = `${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total} clubs · Page ${currentPage+1} of ${totalPages}`;
+    document.getElementById('prevBtn').disabled = currentPage === 0;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+  }
+
+  renderTable();
+
+  // ============================================================
+  // TEAM TABLE
+  // ============================================================
+  const allTeams = teamData.sort((a, b) => b.total - a.total);
+  let filteredTeams = [...allTeams], teamSortKey = 'total', teamSortDir = -1, teamPage = 0;
+  const TEAM_PAGE_SIZE = 20;
+
+  window.sortTeamBy = function(key) {
+    teamSortDir = teamSortKey === key ? teamSortDir * -1 : -1;
+    teamSortKey = key;
+    renderTeamTable();
+  };
+
+  window.filterTeamTable = function() {
+    const q = document.getElementById('teamSearch').value.toLowerCase();
+    filteredTeams = allTeams.filter(r => r.teamName.toLowerCase().includes(q) || r.orgName.toLowerCase().includes(q));
+    teamPage = 0; renderTeamTable();
+  };
+
+  window.changeTeamPg = function(dir) {
+    teamPage = Math.max(0, Math.min(Math.ceil(filteredTeams.length / TEAM_PAGE_SIZE) - 1, teamPage + dir));
+    renderTeamTable();
+  };
+
+  function renderTeamTable() {
+    const sorted = [...filteredTeams].sort((a, b) => {
+      const kmap = { org: 'orgName', name: 'teamName', total: 'total', games: 'games', practices: 'practices', mau: 'mau', highlights: 'highlights', playlists: 'playlists', recruitable: 'recruitable' };
+      const k = kmap[teamSortKey] || 'total';
+      const av = a[k], bv = b[k];
+      return typeof av === 'string' ? teamSortDir * av.localeCompare(bv) : teamSortDir * (bv - av);
+    });
+    const start = teamPage * TEAM_PAGE_SIZE;
+    const page = sorted.slice(start, start + TEAM_PAGE_SIZE);
+    document.getElementById('teamTableBody').innerHTML = page.map(t => `
+      <tr onclick="openPanelByOrg('${t.orgId}')">
+        <td style="font-size:11px;color:var(--text-muted)">${t.orgName}</td>
+        <td style="font-weight:500;font-size:11px">${t.teamName}</td>
+        <td class="num">${t.total.toLocaleString()}</td>
+        <td class="num">${t.games.toLocaleString()}</td>
+        <td class="num">${t.practices.toLocaleString()}</td>
+        <td class="num">${t.mau ? t.mau.toLocaleString() : '—'}</td>
+        <td class="num">${t.highlights.toLocaleString()}</td>
+        <td class="num">${t.playlists.toLocaleString()}</td>
+        <td class="num">${t.recruitable.toLocaleString()}</td>
+      </tr>`).join('');
+    const total = filteredTeams.length;
+    const totalPages = Math.ceil(total / TEAM_PAGE_SIZE);
+    document.getElementById('teamPgInfo').textContent = `${start+1}–${Math.min(start+TEAM_PAGE_SIZE,total)} of ${total} teams · Page ${teamPage+1} of ${totalPages}`;
+    document.getElementById('teamPrevBtn').disabled = teamPage === 0;
+    document.getElementById('teamNextBtn').disabled = teamPage >= totalPages - 1;
+  }
+
+  renderTeamTable();
+
+  // ============================================================
+  // VIEW TOGGLE (Clubs / Teams)
+  // ============================================================
+  window.setView = function(view) {
+    document.getElementById('viewClubs').classList.toggle('active', view === 'clubs');
+    document.getElementById('viewTeams').classList.toggle('active', view === 'teams');
+    document.getElementById('clubView').style.display = view === 'clubs' ? 'grid' : 'none';
+    document.getElementById('teamView').style.display = view === 'teams' ? 'block' : 'none';
+  };
+
+  // ============================================================
+  // CLUB DETAIL PANEL
+  // ============================================================
+  // Panel teams sort
+  let panelTeamSortKey = 'total', panelTeamSortDir = -1, currentPanelTeams = [];
+
+  window.sortPanelTeams = function(key) {
+    panelTeamSortDir = panelTeamSortKey === key ? panelTeamSortDir * -1 : -1;
+    panelTeamSortKey = key;
+    window.renderPanelTeams(currentPanelTeams);
+  };
+
+  window.renderPanelTeams = function(teams) {
+    currentPanelTeams = teams;
+    const sorted = [...teams].sort((a, b) => {
+      const av = a[panelTeamSortKey], bv = b[panelTeamSortKey];
+      return typeof av === 'string' ? panelTeamSortDir * av.localeCompare(bv) : panelTeamSortDir * (bv - av);
+    });
+    // Update sort indicators
+    ['teamName','total','games','practices','mau','highlights','playlists','recruitable'].forEach(k => {
+      const el = document.getElementById('panelTeamSort_' + k);
+      if (el) el.textContent = k === panelTeamSortKey ? (panelTeamSortDir === -1 ? ' ↓' : ' ↑') : '';
+    });
+    document.getElementById('panelTeamsBody').innerHTML = sorted.map(t => `
+      <tr>
+        <td class="team-name-cell" title="${t.teamName}">${t.teamName}</td>
+        <td>${t.total.toLocaleString()}</td>
+        <td>${t.games.toLocaleString()}</td>
+        <td>${t.practices.toLocaleString()}</td>
+        <td>${t.mau ? t.mau.toLocaleString() : '—'}</td>
+        <td>${t.highlights.toLocaleString()}</td>
+        <td>${t.playlists.toLocaleString()}</td>
+        <td>${t.recruitable.toLocaleString()}</td>
+      </tr>`).join('');
+  }
+
+  window.switchPanelTab = function(tab) {
+    document.querySelectorAll('.panel-tab').forEach((t, i) => {
+      const tabs = ['overview','teams','score'];
+      t.classList.toggle('active', tabs[i] === tab);
+    });
+    document.querySelectorAll('.panel-tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('panelTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  };
+
+  window.openPanelByOrg = function(orgId) {
+    const club = clubs.find(c => c.orgId === orgId);
+    if (club) openPanel(club);
+  };
+
+  window.openPanel = function(club) {
+    try {
+    const { name, total, games, practices, mau, teamCount, highlights, recruitable, playlists, score, scoreComponents, teams, orgId } = club;
+    const rank = rankByVideos[orgId] || '—';
+    const gamesPct = total > 0 ? Math.round((games/total)*100) : 0;
+    const practicesPct = total > 0 ? Math.round((practices/total)*100) : 0;
+    const clubMonths = months.map(m => orgMauHistory[orgId]?.[m] || 0);
+
+    // Header
+    document.getElementById('panelClubName').textContent = name;
+
+    // Overview stats
+    document.getElementById('panelTotal').textContent = total.toLocaleString();
+    document.getElementById('panelTeamCount').textContent = teamCount;
+    document.getElementById('panelMAU').textContent = mau ? mau.toLocaleString() : '—';
+    document.getElementById('panelMAUMonth').textContent = latestLabel || 'Most recent month';
+    document.getElementById('panelHighlights').textContent = highlights.toLocaleString();
+    document.getElementById('panelRecruits').textContent = recruitable.toLocaleString();
+    document.getElementById('panelPlaylists').textContent = playlists.toLocaleString();
+
+    // Type bars
+    const maxBar = Math.max(games, practices, 1);
+    document.getElementById('panelTypeBars').innerHTML = [
+      { label: 'Games', val: games, color: '#0a93f5' },
+      { label: 'Practices', val: practices, color: '#ff6300' },
+    ].map(({label, val, color}) => `
+      <div class="type-bar-row">
+        <div class="type-label">${label}</div>
+        <div class="type-bar-track"><div class="type-bar-fill" style="width:${Math.round((val/maxBar)*100)}%;background:${color}"></div></div>
+        <div class="type-count">${val.toLocaleString()}</div>
+      </div>`).join('');
+
+    // MAU trend
+    // Destroy any existing chart on this canvas safely
+    const existingChart = Chart.getChart(document.getElementById('panelMauChart'));
+    if (existingChart) existingChart.destroy();
+    panelMauChart = new Chart(document.getElementById('panelMauChart'), {
+      type: 'line',
+      data: { labels: monthLabels, datasets: [{ label: 'MAU', data: clubMonths.map(v => v||null), borderColor: '#ff6300', backgroundColor: 'rgba(255,99,0,0.08)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#ff6300', borderWidth: 2, spanGaps: false }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#2a3542' }, ticks: { color: '#6b7d8f', font: { size: 10, family: 'Barlow' } } }, y: { grid: { color: '#2a3542' }, ticks: { color: '#6b7d8f', font: { size: 10, family: 'Barlow' } }, beginAtZero: true } } }
+    });
+
+    // Teams tab — reset sort and render
+    panelTeamSortKey = 'total'; panelTeamSortDir = -1;
+    window.renderPanelTeams(teams || []);
+
+    // Score tab
+    // Activity Ratio tab
+    const mauPerTeam = teamCount > 0 ? Math.round((mau / teamCount) * 10) / 10 : 0;
+    const teamsWithVideo = teams ? teams.filter(t => t.total > 0).length : 0;
+    const adoptionRate = teamCount > 0 ? Math.round((teamsWithVideo / teamCount) * 100) : 0;
+    document.getElementById('panelMauPerTeam').textContent = mauPerTeam.toFixed(1);
+    document.getElementById('panelVideoAdoption').textContent = adoptionRate + '%';
+
+    // Compare vs network averages
+    const allMauPerTeam = clubs.map(c2 => c2.teamCount > 0 ? c2.mau / c2.teamCount : 0);
+    const allAdoption = clubs.map(c2 => c2.teamCount > 0 ? (c2.teams.filter(t => t.total > 0).length / c2.teamCount) * 100 : 0);
+    const avgMauPerTeam = Math.round((allMauPerTeam.reduce((s,v)=>s+v,0) / allMauPerTeam.length) * 10) / 10;
+    const avgAdoption = Math.round(allAdoption.reduce((s,v)=>s+v,0) / allAdoption.length);
+    function compBar(val, avg, max, avgLabel) {
+      const pct = max > 0 ? Math.round((val/max)*100) : 0;
+      const avgPct = max > 0 ? Math.round((avg/max)*100) : 0;
+      const col = val >= avg ? '#34d399' : '#f87171';
+      return `<div style="position:relative;height:8px;background:var(--border);border-radius:4px;overflow:visible;margin-bottom:22px;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width 0.6s;"></div>
+        <div style="position:absolute;top:-4px;width:3px;height:16px;background:#6b7d8f;border-radius:2px;left:${avgPct}%;"></div>
+        <div style="position:absolute;top:-18px;font-size:9px;font-weight:600;letter-spacing:0.5px;color:#6b7d8f;white-space:nowrap;transform:translateX(-50%);left:${avgPct}%;">${avgLabel}</div>
+        <div style="position:absolute;top:14px;font-size:9px;font-weight:600;letter-spacing:0.5px;color:#6b7d8f;white-space:nowrap;transform:translateX(-50%);left:${avgPct}%;">LOVB AVG</div>
+      </div>`;
+    }
+
+    const maxMau = Math.max(...allMauPerTeam);
+    const maxAdopt = 100;
+    document.getElementById('panelRatioComparison').innerHTML = [
+      { label: 'MAU per Team', val: mauPerTeam.toFixed(1), avg: avgMauPerTeam.toFixed(1), bar: compBar(mauPerTeam, avgMauPerTeam, maxMau, avgMauPerTeam.toFixed(1)), vsAvg: mauPerTeam >= avgMauPerTeam },
+      { label: 'Video Adoption', val: adoptionRate+'%', avg: avgAdoption+'%', bar: compBar(adoptionRate, avgAdoption, maxAdopt, avgAdoption+'%'), vsAvg: adoptionRate >= avgAdoption },
+    ].map(row => `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;font-weight:600;color:var(--text-muted)">${row.label}</span>
+          <span style="font-size:13px;font-weight:700;color:${row.vsAvg?'#34d399':'#f87171'}">${row.val}</span>
         </div>
-      </td>
-      <td class="number">${row.games.toLocaleString()}</td>
-      <td class="number">${row.practices.toLocaleString()}</td>
-      <td class="number">${row.mau ? row.mau.toLocaleString() : '—'}</td>
-    `;
-    tbody.appendChild(tr);
+        ${row.bar}
+      </div>`).join('');
+
+    // Reset to overview tab
+    switchPanelTab('overview');
+    document.getElementById('clubPanel').classList.add('open');
+    document.getElementById('panelOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    } catch(err) {
+      console.error('DEBUG openPanel crashed at:', err.message, err.stack);
+    }
+  };
+
+  let panelIsFullscreen = false;
+
+  window.togglePanelFullscreen = function() {
+    const panel = document.getElementById('clubPanel');
+    const btn = document.getElementById('panelExpandBtn');
+    panelIsFullscreen = !panelIsFullscreen;
+    panel.classList.toggle('fullscreen', panelIsFullscreen);
+    // Hide overlay when fullscreen (no outside to click)
+    document.getElementById('panelOverlay').style.opacity = panelIsFullscreen ? '0' : '';
+    document.getElementById('panelOverlay').style.pointerEvents = panelIsFullscreen ? 'none' : '';
+    btn.textContent = panelIsFullscreen ? '⤡' : '⤢';
+    btn.title = panelIsFullscreen ? 'Restore panel' : 'Expand to full screen';
+  };
+
+  window.closePanel = function() {
+    const panel = document.getElementById('clubPanel');
+    panel.classList.remove('open');
+    panel.classList.remove('fullscreen');
+    document.getElementById('panelOverlay').classList.remove('open');
+    document.getElementById('panelOverlay').style.opacity = '';
+    document.getElementById('panelOverlay').style.pointerEvents = '';
+    panelIsFullscreen = false;
+    document.getElementById('panelExpandBtn').textContent = '⤢';
+    document.body.style.overflow = '';
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('clubPanel').classList.contains('open')) {
+      closePanel();
+    }
   });
 
-  const total = filteredData.length;
-  const maxPage = Math.ceil(total / PAGE_SIZE);
-  document.getElementById('paginationInfo').textContent =
-    `Showing ${start+1}–${Math.min(start+PAGE_SIZE, total)} of ${total} clubs`;
-  document.getElementById('prevBtn').disabled = currentPage === 0;
-  document.getElementById('nextBtn').disabled = currentPage >= maxPage - 1;
+  // ============================================================
+  // GLOBAL SEARCH (clubs + teams)
+  // ============================================================
+  window.filterGlobalSearch = function() {
+    const q = document.getElementById('globalSearch').value.toLowerCase();
+    const box = document.getElementById('globalResults');
+    if (!q) { box.style.display = 'none'; return; }
+
+    const clubMatches = clubs.filter(c => c.name.toLowerCase().includes(q)).slice(0, 6).map(c => ({ type: 'club', label: c.name, sub: `${c.teamCount} teams · ${c.total.toLocaleString()} videos`, data: c }));
+    const teamMatches = teamData.filter(t => t.teamName.toLowerCase().includes(q) || t.orgName.toLowerCase().includes(q)).slice(0, 6).map(t => ({ type: 'team', label: t.teamName, sub: t.orgName, data: t }));
+
+    const all = [...clubMatches, ...teamMatches];
+    if (!all.length) { box.innerHTML = '<div style="padding:10px 16px;font-size:12px;color:var(--text-muted)">No results found</div>'; box.style.display = 'block'; return; }
+
+    box.innerHTML = all.map(r => `
+      <div class="global-result-item" onclick="${r.type === 'club' ? `openPanelByOrg('${r.data.orgId}')` : `openPanelByOrg('${r.data.orgId}')`};document.getElementById('globalSearch').value='';document.getElementById('globalResults').style.display='none'">
+        <div>
+          <div style="font-weight:600;font-size:12px">${r.label}</div>
+          <div class="global-result-org">${r.sub}</div>
+        </div>
+        <span class="global-result-type ${r.type}">${r.type}</span>
+      </div>`).join('');
+    box.style.display = 'block';
+  };
+
+  window.showGlobalResults = function() { filterGlobalSearch(); };
+  document.getElementById('globalSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.toLowerCase();
+      const club = clubs.find(c => c.name.toLowerCase().includes(q));
+      if (club) { openPanel(club); e.target.value = ''; document.getElementById('globalResults').style.display = 'none'; }
+    }
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.global-search-wrap')) document.getElementById('globalResults').style.display = 'none';
+  });
+
+  // ============================================================
+  // CSV DOWNLOADS
+  // ============================================================
+  window.downloadCSV = function() {
+    const headers = ['Rank','Club','Teams','Total Videos','Games','Practices','MAU','Highlights','Playlists','Recruitable'];
+    const rows = tableData.map(r => [rankByVideos[r.orgId]||'', `"${r.name}"`, r.teamCount, r.total, r.games, r.practices, r.mau||0, r.highlights, r.playlists, r.recruitable]);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([[headers,...rows].map(r=>r.join(',')).join('\n')], {type:'text/csv'}));
+    a.download = 'LOVB_Club_Usage.csv'; a.click();
+  };
+
+  window.downloadTeamCSV = function() {
+    const headers = ['Club','Team','Total Videos','Games','Practices','MAU','Highlights','Playlists','Recruitable'];
+    const rows = allTeams.map(t => [`"${t.orgName}"`,`"${t.teamName}"`,t.total,t.games,t.practices,t.mau||0,t.highlights,t.playlists,t.recruitable]);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([[headers,...rows].map(r=>r.join(',')).join('\n')], {type:'text/csv'}));
+    a.download = 'LOVB_Team_Usage.csv'; a.click();
+  };
+
 }
 
-renderTable();
-
 // ============================================================
-// CSV DOWNLOAD
+// DATE HELPERS
 // ============================================================
-function downloadCSV() {
-  const headers = ['Club Name','Total Videos','Games','Practices','Latest MAU'];
-  const rows = tableData.map(r => [
-    `"${r.name}"`, r.total, r.games, r.practices, r.mau || ''
-  ]);
-  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'LOVB_Usage_Data.csv';
-  a.click();
+function parseMonth(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  // ISO format: 2026-02-01 or 2026-02-01 00:00 or 2026-02-01T00:00
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // US format from Google Sheets: 2/1/2026 or 2/1/2026 0:00 or 2/1/2026 0:00:00
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[1].padStart(2,'0')}-01`;
+  return s.slice(0, 10);
 }
+
+loadData();
 </script>
 </body>
 </html>
