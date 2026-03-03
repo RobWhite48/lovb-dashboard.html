@@ -156,9 +156,10 @@ tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; 
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: rgba(255,99,0,0.04); }
 tbody td { padding: 10px 16px; }
-td.club-name-cell { font-weight: 600; font-size: 12px; }
-td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--text-muted); }
-.bar-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+td.club-name-cell { font-weight: 600; font-size: 12px; padding-right: 6px; }
+td.num { font-variant-numeric: tabular-nums; text-align: center; color: var(--text-muted); }
+.bar-cell { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.sort-ind { font-size: 9px; opacity: 0.45; margin-left: 3px; display: inline-block; }
 .mini-bar { width: 50px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .mini-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
 .view-row-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
@@ -545,15 +546,15 @@ footer p { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
               <thead>
                 <tr>
                   <th onclick="sortBy('rank')">
-                    Rank
+                    Rank <span class="sort-ind" data-key="rank">↕</span>
                     <span class="th-tooltip">?<span class="th-tooltip-text">Ranked #1–53 by total videos uploaded. #1 = most videos.</span></span>
                   </th>
-                  <th onclick="sortBy('name')">Club</th>
-                  <th onclick="sortBy('teams')" style="text-align:right">Teams</th>
-                  <th onclick="sortBy('total')" style="text-align:right">Videos</th>
-                  <th onclick="sortBy('mau')" style="text-align:right">MAU</th>
-                  <th onclick="sortBy('highlights')" style="text-align:right">Highlights <span class="snapshot-badge">Jul–Feb</span></th>
-                  <th onclick="sortBy('recruitable')" style="text-align:right">Recruitable <span class="snapshot-badge">Jul–Feb</span></th>
+                  <th onclick="sortBy('name')">Club <span class="sort-ind" data-key="name">↕</span></th>
+                  <th onclick="sortBy('teams')" style="text-align:center">Teams <span class="sort-ind" data-key="teams">↕</span></th>
+                  <th onclick="sortBy('total')" style="text-align:center">Videos <span class="sort-ind" data-key="total">↓</span></th>
+                  <th onclick="sortBy('mau')" style="text-align:center">MAU <span class="sort-ind" data-key="mau">↕</span></th>
+                  <th onclick="sortBy('highlights')" style="text-align:center">Highlights <span class="snapshot-badge">Jul–Feb</span> <span class="sort-ind" data-key="highlights">↕</span></th>
+                  <th onclick="sortBy('recruitable')" style="text-align:center">Recruitable <span class="snapshot-badge">Jul–Feb</span> <span class="sort-ind" data-key="recruitable">↕</span></th>
                   <th></th>
                 </tr>
               </thead>
@@ -1063,7 +1064,7 @@ function init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, en
   // ============================================================
   // CLUB TABLE
   // ============================================================
-  let filteredData = [...tableData], sortKey = 'total', sortDir = -1, currentPage = 0;
+  let filteredData = [...tableData], sortKey = 'total', sortDir = 1, currentPage = 0;
   const PAGE_SIZE = 15;
 
   function getSortVal(r, key) {
@@ -1077,7 +1078,7 @@ function init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, en
   }
 
   window.sortBy = function(key) {
-    sortDir = sortKey === key ? sortDir * -1 : -1;
+    sortDir = sortKey === key ? sortDir * -1 : 1;
     sortKey = key;
     renderTable();
   };
@@ -1119,6 +1120,11 @@ function init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, en
     document.getElementById('pgInfo').textContent = `${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total} clubs · Page ${currentPage+1} of ${totalPages}`;
     document.getElementById('prevBtn').disabled = currentPage === 0;
     document.getElementById('nextBtn').disabled = currentPage >= totalPages - 1;
+    document.querySelectorAll('.sort-ind[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      if (key !== sortKey) { el.textContent = '↕'; el.style.opacity = '0.35'; }
+      else { el.textContent = sortDir === 1 ? '↓' : '↑'; el.style.opacity = '0.9'; }
+    });
   }
 
   renderTable();
