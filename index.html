@@ -251,9 +251,39 @@ footer p { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
   .charts-grid { grid-template-columns: 1fr; }
   .chart-card.full { grid-column: 1; }
 }
+
+/* LOGIN WALL */
+#loginWall { position: fixed; inset: 0; background: var(--hudl-black); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 40px 44px; width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 24px 80px rgba(0,0,0,0.7); }
+.login-logo { display: flex; align-items: center; gap: 14px; font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+.login-logo .lo { color: var(--text); } .login-logo .vb { color: var(--accent); }
+.login-logo .sep { width: 2px; height: 34px; background: var(--border-light); }
+.login-logo .hu { color: var(--accent); } .login-logo .dl { color: var(--text); }
+.login-sub { font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-top: -10px; }
+.login-divider { width: 100%; height: 1px; background: var(--border); }
+.login-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); align-self: flex-start; }
+.login-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 15px; padding: 12px 16px; border-radius: 6px; outline: none; transition: border-color 0.2s; letter-spacing: 2px; }
+.login-input:focus { border-color: var(--accent); }
+.login-btn { width: 100%; background: var(--accent); border: none; color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 13px; border-radius: 6px; cursor: pointer; transition: opacity 0.2s; }
+.login-btn:hover { opacity: 0.85; }
+.login-error { font-size: 12px; color: var(--red); font-weight: 500; min-height: 16px; text-align: center; }
+.login-footer { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
 </style>
 </head>
 <body>
+
+<div id="loginWall">
+  <div class="login-box">
+    <div class="login-logo"><span class="lo">LO</span><span class="vb">VB</span><div class="sep"></div><span class="hu">HU</span><span class="dl">DL</span></div>
+    <div class="login-sub">Club Usage Dashboard</div>
+    <div class="login-divider"></div>
+    <div class="login-label">Password</div>
+    <input type="password" class="login-input" id="loginInput" placeholder="Enter password…" autocomplete="current-password" />
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" onclick="checkLogin()">Access Dashboard →</button>
+    <div class="login-footer">LOVB × Hudl · Authorized Access Only</div>
+  </div>
+</div>
 
 <div id="loadingOverlay">
   <div class="loading-logo"><span class="lo">LO</span><span class="vb">VB</span><div class="sep"></div><span class="hu">HU</span><span class="dl">DL</span></div>
@@ -1406,7 +1436,32 @@ function parseMonth(raw) {
   return s.slice(0, 10);
 }
 
-loadData();
+// ============================================================
+// LOGIN WALL
+// ============================================================
+window.checkLogin = function() {
+  const val = document.getElementById('loginInput').value;
+  if (val === 'lovb2026') {
+    document.getElementById('loginWall').style.display = 'none';
+    loadData();
+  } else {
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = 'Incorrect password. Please try again.';
+    document.getElementById('loginInput').value = '';
+    document.getElementById('loginInput').focus();
+    setTimeout(() => { errEl.textContent = ''; }, 3000);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  const inp = document.getElementById('loginInput');
+  if (inp) {
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.checkLogin();
+    });
+    inp.focus();
+  }
+});
 </script>
 </body>
 </html>
