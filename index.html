@@ -49,9 +49,10 @@ header { display: flex; align-items: stretch; border-bottom: 1px solid var(--bor
 .date-pill { background: var(--surface3); border: 1px solid var(--border-light); border-radius: 4px; padding: 5px 12px; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
 
 /* VIEW TOGGLE */
-.view-toggle { display: flex; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
-.view-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Barlow', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all 0.15s; }
-.view-btn.active { background: var(--accent); color: #fff; }
+.view-toggle { display: flex; background: var(--surface3); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
+.view-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 18px; cursor: pointer; transition: all 0.15s; border-radius: 5px; }
+.view-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.04); }
+.view-btn.active { background: var(--accent); color: #fff; box-shadow: 0 1px 6px rgba(255,99,0,0.35); }
 
 /* MAIN */
 .main { padding: 28px 36px; display: grid; gap: 24px; }
@@ -197,6 +198,13 @@ td.num { font-variant-numeric: tabular-nums; text-align: center; color: var(--te
 .panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
 .panel-tab-content { display: none; flex-direction: column; gap: 20px; }
 .panel-tab-content.active { display: flex; }
+/* Teams panel fills to bottom */
+#panelTabTeams { flex: 1; min-height: 0; }
+.teams-scroll { flex: 1; min-height: 0; overflow-x: auto; overflow-y: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s; }
+.teams-scroll:hover { scrollbar-color: var(--border-light) transparent; }
+.teams-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.teams-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; transition: background 0.3s; }
+.teams-scroll:hover::-webkit-scrollbar-thumb { background: var(--border-light); }
 
 /* Panel stat grid */
 .club-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: 6px; overflow: hidden; }
@@ -358,11 +366,11 @@ footer p { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
 
     <!-- TEAMS TAB -->
     <div class="panel-tab-content" id="panelTabTeams">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0;">
         <div style="font-size:11px;color:var(--text-muted)">All teams for this club</div>
         <span class="snapshot-badge">📅 Jul 2025 – Feb 2026 cumulative for engagement metrics</span>
       </div>
-      <div style="overflow-x:auto;overflow-y:auto;max-height:420px;">
+      <div class="teams-scroll">
         <table class="teams-table">
           <thead>
             <tr>
@@ -1236,6 +1244,7 @@ function init(mauData, videoTeamRows, typeMap, engMap, grandTotal, orgLookup, en
     });
     document.querySelectorAll('.panel-tab-content').forEach(el => el.classList.remove('active'));
     document.getElementById('panelTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    document.querySelector('.panel-body').style.overflowY = tab === 'teams' ? 'hidden' : 'auto';
   };
 
   window.openPanelByOrg = function(orgId) {
@@ -1445,11 +1454,19 @@ function parseMonth(raw) {
 // ============================================================
 // LOGIN WALL
 // ============================================================
+const AUTH_KEY = 'lovb_auth_ts';
+const AUTH_TTL = 7 * 24 * 60 * 60 * 1000;
+
+function grantAccess() {
+  document.getElementById('loginWall').style.display = 'none';
+  loadData();
+}
+
 window.checkLogin = function() {
   const val = document.getElementById('loginInput').value;
   if (val === 'lovb2026') {
-    document.getElementById('loginWall').style.display = 'none';
-    loadData();
+    try { localStorage.setItem(AUTH_KEY, Date.now().toString()); } catch(e) {}
+    grantAccess();
   } else {
     const errEl = document.getElementById('loginError');
     errEl.textContent = 'Incorrect password. Please try again.';
@@ -1460,6 +1477,13 @@ window.checkLogin = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+  try {
+    const saved = localStorage.getItem(AUTH_KEY);
+    if (saved && (Date.now() - parseInt(saved, 10)) < AUTH_TTL) {
+      grantAccess();
+      return;
+    }
+  } catch(e) {}
   const inp = document.getElementById('loginInput');
   if (inp) {
     inp.addEventListener('keydown', function(e) {
